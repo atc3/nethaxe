@@ -34,6 +34,13 @@ class Server {
 		Net.server_active = true;
 	}
 	
+	/**
+	 * binds the server to the given host & port
+	 * can only bind one server per port
+	 * @param	Host hostname, ex. "127.0.0.1"
+	 * @param	Port port #, ex. 3000
+	 * @return true if bind is successful, false if bind has failed
+	 */
 	public function bind_server(Host:Host, Port:Int):Bool {
 		DC.log("binding server...");
 		try {
@@ -50,6 +57,9 @@ class Server {
 		}
 	}
 	
+	/**
+	 * the server thread that listens for feedback
+	 */
 	private function thread_listen():Void {
 		
 		var threadMessage:String = "";
@@ -65,6 +75,11 @@ class Server {
 		
 		return;
 	}
+	
+	/**
+	 * accept incoming connection requests as they come in
+	 * if a client is accepted, add them to the pool so they get updates and such
+	 */
 	private function accept_clients():Void {
 		c = socket.accept();
 		if (c != null) {
@@ -78,17 +93,22 @@ class Server {
 		}
 	}
 	
-	
+	/**
+	 * list all clients currently connected to the server
+	 */
 	private function list_clients():Void {
 		if (connected_sockets.length <= 0) {
 			DC.log("no clients connected");
 		} else {
 			for (s in connected_sockets) {
-				DC.log(s.host());
+				DC.log(s.peer());
 			}
 		}
 	}
 	
+	/**
+	 * clean up
+	 */
 	public function destroy():Void {
 		DC.log("destroying server...");
 		this.socket.close();
