@@ -8,7 +8,7 @@
   "releasenote": "initial release",
   "contributors": ["blahoink"],
   "dependencies": {
-	  "hscript":"2.0.2",
+	  "hscript":"",
 	  "dconsole":""
   }
 }
