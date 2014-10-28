@@ -8,6 +8,9 @@ import pgr.dconsole.DC;
 
 class Server {
 	
+	/**
+	 * max number of clients this server will handle before it starts to reject new connection requests.
+	 */
 	public static inline var MAX_CONNECTIONS:Int = 10;
 	
 	var socket:Socket;

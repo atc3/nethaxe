@@ -28,6 +28,11 @@ class Client {
 		listen_thread = Thread.create(thread_listen);
 	}
 	
+	/**
+	 * connect to the given server.
+	 * @param	Host hostname. ex, "127.0.0.1"
+	 * @param	Port port #. ex, 3000
+	 */
 	public function connect(Host:Host, Port:Int):Void {
 		
 		// terminate any existing connection
@@ -58,6 +63,9 @@ class Client {
 		// send handshake
 	}
 	
+	/**
+	 * listen to server responses and act accordingly
+	 */
 	private function thread_listen():Void {
 		
 		var threadMessage:String = "";
@@ -77,6 +85,9 @@ class Client {
 		return;
 	}
 	
+	/**
+	 * clean up
+	 */
 	public function destroy():Void {
 		DC.log("destroying client...");
 		listen_thread.sendMessage("finish");
