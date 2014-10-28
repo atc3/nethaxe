@@ -26,6 +26,8 @@ class Client {
 		socket.setFastSend(true);
 		
 		listen_thread = Thread.create(thread_listen);
+		
+		DC.registerFunction(connect, "connect");
 	}
 	
 	/**
@@ -33,7 +35,9 @@ class Client {
 	 * @param	Host hostname. ex, "127.0.0.1"
 	 * @param	Port port #. ex, 3000
 	 */
-	public function connect(Host:Host, Port:Int):Void {
+	public function connect(Hostname:String = "localhost", Port:Int = 3000):Void {
+		
+		host = new Host(Hostname);
 		
 		// terminate any existing connection
 		if (connected) {
@@ -45,16 +49,16 @@ class Client {
 		
 		DC.log("connecting client...");
 		try {
-			socket.connect(Host, Port);
+			socket.connect(host, Port);
 			connected = true;
-			DC.log('Connected to ' + Host.toString() + ':' + Port);
+			DC.log('Connected to ' + host.toString() + ':' + Port);
 			
-			server_host = Host;
+			server_host = host;
 			server_port = Port;
 			
 			Net.client_active = true;
 		} catch (z:Dynamic) {
-			DC.log('Could not connect to ' + Host.toString() + ':' + Port);
+			DC.log('Could not connect to ' + host.toString() + ':' + Port);
 			
 			Net.client_active = false;
 			return;
