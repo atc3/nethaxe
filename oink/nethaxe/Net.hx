@@ -10,10 +10,10 @@ import pgr.dconsole.DC;
 class Net {
 	// default values
 	public static var DEFAULT_SERVER_BIND_PORT:Int = 3000;
-	public static var DEFAULT_SERVER_HOST:String = "localhost";
+	public static var DEFAULT_SERVER_HOST:Host = new Host("localhost");
 	
 	public static var SERVER_BIND_PORT:Int;
-	public static var SERVER_HOST:String;
+	public static var SERVER_HOST:Host;
 	
 	public static var server:Server;
 	public static var server_active:Bool;
@@ -29,6 +29,9 @@ class Net {
 		
 	}
 	
+	/**
+	 * set some flags and register some other stuff with dconsole
+	 */
 	public static function init():Void {
 		server_active = false;
 		client_active = false;
@@ -39,20 +42,33 @@ class Net {
 		DC.registerFunction(client_status, "client_status");
 	}
 	
-	public static function create_server():Void {
+	/**
+	 * create a server and bind it
+	 * @param	Host hostname to bind to. ex, "localhost"
+	 * @param	Port port # to bind to. ex, 3000
+	 */
+	public static function create_server(Host:Host = null, Port:Int = -1):Void {
+		
 		if (!server_active) {
-			if(SERVER_HOST != null && SERVER_BIND_PORT > 0)
-				server = new Server(new Host(SERVER_HOST), SERVER_BIND_PORT);
+			if (Host != null && Port > 0) {
+				SERVER_HOST = Host;
+				SERVER_BIND_PORT = Port;
+				server = new Server(SERVER_HOST, SERVER_BIND_PORT);
+			}
 			else
-				server = new Server(new Host(DEFAULT_SERVER_HOST), DEFAULT_SERVER_BIND_PORT);
+				server = new Server(DEFAULT_SERVER_HOST, DEFAULT_SERVER_BIND_PORT);
 		}
 	}
 	
+	/**
+	 * create a client. doesn't connect to anything yet
+	 */
 	public static function create_client():Void {
 		if(!client_active) {
 			client = new Client();
 		}
 	}
+	
 	
 	private static function server_status():Void {
 		if (server_active) {
