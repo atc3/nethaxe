@@ -1,4 +1,4 @@
-package net;
+package oink.nethaxe;
 
 import sys.net.Host;
 import sys.net.Socket;

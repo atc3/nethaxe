@@ -1,4 +1,4 @@
-package net ;
+package oink.nethaxe;
 
 import cpp.vm.Thread;
 import sys.net.Host;
