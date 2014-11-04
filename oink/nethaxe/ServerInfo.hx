@@ -1,5 +1,7 @@
 package oink.nethaxe;
 
+import pgr.dconsole.DC;
+
 /**
  * Wrapper for the server socket
  */

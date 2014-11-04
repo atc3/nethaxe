@@ -1,5 +1,7 @@
 package oink.nethaxe;
 
+import sys.net.Socket;
+
 /**
  * Wrapper for the client socket.
  */
