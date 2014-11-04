@@ -10,49 +10,50 @@ import pgr.dconsole.DC;
  * Server side of chat.
  * @author YellowAfterlife
  */
-
-class ClientInfo {
-	public var socket:Socket;
-	public var name:String;
-	public var server:Server;
-	public var active:Bool;
-	public function new(sv:Server, skt:Socket) {
-		server = sv;
-		socket = skt;
-		name = '';
-		active = true;
-	}
-	public function toString():String {
-		var peer = socket.peer();
-		var pstr = Std.string(peer.host) + ':' + peer.port;
-		return (name == null || name == '') ? pstr : (name + '(' + pstr + ')');
-	}
-	public function send(text:String) {
-		try {
-			socket.output.writeString(text);
-		} catch (z:Dynamic) {
-			active = false;
-		}
-	}
-}
-class ServerInfo extends ClientInfo {
-	public function new(sv:Server) {
-		super(sv, null);
-		name = 'Server';
-	}
-	override public function toString():String {
-		return name + '(console)';
-	}
-	override public function send(text:String) {
-		//server.console.write(text);
-		DC.log(text);
-	}
-}
 class Server {
 	public var socket:Socket;
 	public var clients:Array<ClientInfo>;
 	//public var console:RawEdit;
 	public var info:ServerInfo;
+	
+	public function new() {
+		//var cout = Sys.stdout();
+		//var cin = Sys.stdin();
+		// Read port:
+		//cout.writeString('Port: ');
+		//var port = Std.parseInt(cin.readLine());
+		//if (port == null) port = 17051;
+		var port = 3000;
+		// Bind server to port and start listening:
+		//cout.writeString('Binding...\n');
+		DC.log('Binding...\n');
+		try {
+			socket = new Socket();
+			socket.bind(new Host('127.0.0.1'), port);
+			socket.listen(3);
+		} catch (z:Dynamic) {
+			//cout.writeString('Could not bind to port.\n');
+			//cout.writeString('Ensure that no server is running on port ' + port + '.\n');
+			
+			DC.log('Could not bind to port.\n');
+			DC.log('Ensure that no server is running on port ' + port + '.\n');
+			
+			return;
+		}
+		//cout.writeString('Done.\n');
+		DC.log('Done.\n');
+		// Initialize some values
+		info = new ServerInfo(this);
+		clients = [];
+		//console = new RawEdit();
+		//console.prefix = '> ';
+		//console.onSend = function(t:String) { onChat(t, info); return true; };
+		//
+		Thread.create(threadAccept);
+		//console.open();
+	}
+	
+	
 	/** Sends given text to all active clients */
 	public function broadcast(text:String) {
 		for (cl in clients) {
@@ -157,40 +158,5 @@ class Server {
 			}
 		}
 	}
-	public function new() {
-		//var cout = Sys.stdout();
-		//var cin = Sys.stdin();
-		// Read port:
-		//cout.writeString('Port: ');
-		//var port = Std.parseInt(cin.readLine());
-		//if (port == null) port = 17051;
-		var port = 3000;
-		// Bind server to port and start listening:
-		//cout.writeString('Binding...\n');
-		DC.log('Binding...\n');
-		try {
-			socket = new Socket();
-			socket.bind(new Host('127.0.0.1'), port);
-			socket.listen(3);
-		} catch (z:Dynamic) {
-			//cout.writeString('Could not bind to port.\n');
-			//cout.writeString('Ensure that no server is running on port ' + port + '.\n');
-			
-			DC.log('Could not bind to port.\n');
-			DC.log('Ensure that no server is running on port ' + port + '.\n');
-			
-			return;
-		}
-		//cout.writeString('Done.\n');
-		DC.log('Done.\n');
-		// Initialize some values
-		info = new ServerInfo(this);
-		clients = [];
-		//console = new RawEdit();
-		//console.prefix = '> ';
-		//console.onSend = function(t:String) { onChat(t, info); return true; };
-		//
-		Thread.create(threadAccept);
-		//console.open();
-	}
+	
 }
