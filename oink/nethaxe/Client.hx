@@ -1,102 +1,77 @@
 package oink.nethaxe;
 
+import cpp.vm.Thread;
 import sys.net.Host;
 import sys.net.Socket;
-import cpp.vm.Thread;
-
 import pgr.dconsole.DC;
 
-class Client {
+/**
+ * Client.hx
+ * Chat client program behaviour
+ * @author YellowAfterlife
+ */
 
-	public var socket:Socket;
-	
-	public var listen_thread:Thread;
-	
-	public var connected:Bool;
-	
-	public var server_host:Host;
-	public var server_port:Int;
-	
-	public var host:Host;
-	public var port:Int;
-	
-	public function new() {
-		DC.log("creating client...");
-		socket = new Socket();
-		socket.setFastSend(true);
-		
-		listen_thread = Thread.create(thread_listen);
-		
-		DC.registerFunction(connect, "connect");
-	}
-	
-	/**
-	 * connect to the given server.
-	 * @param	Host hostname. ex, "127.0.0.1"
-	 * @param	Port port #. ex, 3000
-	 */
-	public function connect(Hostname:String = "localhost", Port:Int = 3000):Void {
-		
-		host = new Host(Hostname);
-		
-		// terminate any existing connection
-		if (connected) {
-			DC.log("disconnecting client...");
-			socket.close();
-			connected = false;
-			DC.log("disconnected client from " + socket.peer);
-		}
-		
-		DC.log("connecting client...");
+class Client {
+	var socket:Socket;
+	//var console:RawEdit;
+	/** Input handler */
+	function onChatLine(text:String):Bool {
 		try {
-			socket.connect(host, Port);
-			connected = true;
-			DC.log('Connected to ' + host.toString() + ':' + Port);
-			
-			server_host = host;
-			server_port = Port;
-			
-			Net.client_active = true;
+			socket.write(text + '\n');
 		} catch (z:Dynamic) {
-			DC.log('Could not connect to ' + host.toString() + ':' + Port);
-			
-			Net.client_active = false;
+			//console.write('Connection lost.\n');
+			//console.close();
+			DC.log('Connection lost.\n');
+			return false;
+		}
+		return true;
+	}
+	/** Listener thread*/
+	function threadListen() {
+		while (true) {
+			try {
+				var text = socket.input.readLine();
+				//console.write(text + '\n');
+				DC.log(text + '\n');
+			} catch (z:Dynamic) {
+				//console.write('Connection lost.\n');
+				//console.close();
+				DC.log('Connection lost.\n');
+				return;
+			}
+		}
+	}
+	public function new() {
+		//var cout = Sys.stdout();
+		//var cin = Sys.stdin();
+		//
+		//cout.writeString('Server IP: ');
+		//var ip = cin.readLine();
+		//if (ip == '') ip = '127.0.0.1';
+		var ip = '127.0.0.1';
+		//cout.writeString('Port: ');
+		//var port = Std.parseInt(cin.readLine());
+		//if (port == null) port = 17051;
+		var port = 3000;
+		//cout.writeString('Connecting...\n');
+		DC.log('Connecting...\n');
+		try {
+			socket = new Socket();
+			socket.connect(new Host(ip), port);
+			//cout.writeString('Connected to ' + ip + ':' + port + '\n');
+			DC.log('Connected to ' + ip + ':' + port + '\n');
+		} catch (z:Dynamic) {
+			//cout.writeString('Could not connect to ' + ip + ':' + port + '\n');
+			DC.log('Could not connect to ' + ip + ':' + port + '\n');
 			return;
 		}
-		
-		// send handshake
+		//
+		socket.output.writeString('/name User' + Std.int(Math.random() * 65536) + '\n');
+		//console = new RawEdit();
+		//console.prefix = '> ';
+		//console.onSend = onChatLine;
+		Thread.create(threadListen);
+		//console.open();
 	}
 	
-	/**
-	 * listen to server responses and act accordingly
-	 */
-	private function thread_listen():Void {
-		
-		var threadMessage:String = "";
-		
-		while (threadMessage != "finish") {
-			threadMessage = Thread.readMessage(false);
-			
-			// catch server output
-			
-			Sys.sleep(0.001);
-		}
-		
-		// clean up
-		DC.log("closing client...");
-		socket.close();
-		DC.log("client closed");
-		return;
-	}
-	
-	/**
-	 * clean up
-	 */
-	public function destroy():Void {
-		DC.log("destroying client...");
-		listen_thread.sendMessage("finish");
-		socket.close();
-		
-		Net.client_active = false;
-	}
 }
