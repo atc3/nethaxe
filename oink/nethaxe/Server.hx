@@ -11,44 +11,42 @@ import pgr.dconsole.DC;
  * @author YellowAfterlife
  */
 class Server {
+	/**
+	 * server socket that will accept all incoming connections
+	 */
 	public var socket:Socket;
+	/**
+	 * array of clients to handle i/o from
+	 */
 	public var clients:Array<ClientInfo>;
-	//public var console:RawEdit;
+	/**
+	 * server info
+	 */
 	public var info:ServerInfo;
 	
 	public function new() {
-		//var cout = Sys.stdout();
-		//var cin = Sys.stdin();
-		// Read port:
-		//cout.writeString('Port: ');
-		//var port = Std.parseInt(cin.readLine());
-		//if (port == null) port = 17051;
 		var port = 3000;
+		
 		// Bind server to port and start listening:
-		//cout.writeString('Binding...\n');
 		DC.log('Binding...\n');
 		try {
 			socket = new Socket();
 			socket.bind(new Host('127.0.0.1'), port);
 			socket.listen(3);
 		} catch (z:Dynamic) {
-			//cout.writeString('Could not bind to port.\n');
-			//cout.writeString('Ensure that no server is running on port ' + port + '.\n');
-			
+			// bind failed. some other server is probably hogging the specified port
 			DC.log('Could not bind to port.\n');
 			DC.log('Ensure that no server is running on port ' + port + '.\n');
-			
 			return;
 		}
-		//cout.writeString('Done.\n');
 		DC.log('Done.\n');
+		
 		// Initialize some values
 		info = new ServerInfo(this);
 		clients = [];
 		//console = new RawEdit();
 		//console.prefix = '> ';
 		//console.onSend = function(t:String) { onChat(t, info); return true; };
-		//
 		Thread.create(threadAccept);
 		//console.open();
 	}
