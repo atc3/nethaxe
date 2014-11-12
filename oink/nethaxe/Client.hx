@@ -53,7 +53,7 @@ class Client {
 		} catch (z:Dynamic) {
 			
 			DC.log('Connection lost.\n');
-			socket.output.write('Connection lost.\n');
+			socket.output.writeString('Connection lost.\n');
 			
 			return false;
 		}
@@ -71,7 +71,7 @@ class Client {
 				
 			} catch (z:Dynamic) {
 				DC.log('Connection lost.\n');
-				socket.output.write('Connection lost.\n');
+				socket.output.writeString('Connection lost.\n');
 				return;
 			}
 		}
