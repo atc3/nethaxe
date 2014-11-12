@@ -15,45 +15,51 @@ class Server {
 	 * server socket that will accept all incoming connections
 	 */
 	public var socket:Socket;
+	
 	/**
 	 * array of clients to handle i/o from
 	 */
 	public var clients:Array<ClientInfo>;
+	
 	/**
 	 * server info
 	 */
 	public var info:ServerInfo;
 	
-	public function new(Hostname:String='', Port:Int=0) {
+	
+	public function new(Hostname:String = '', Port:Int = 0) {
+		
+		// Initialize some values
+		info = new ServerInfo(this);
 		
 		// apply defaults
-		if (Hostname == '') Hostname = info.DEFAULT_HOSTNAME;
-		if (Port == 0) Port = info.DEFAULT_PORT;
+		if (Hostname == '') Hostname = ServerInfo.DEFAULT_HOSTNAME;
+		if (Port == 0) Port = ServerInfo.DEFAULT_PORT;
 		
 		info.port = Port;
+		info.hostname = Hostname;
+		
+		info.host = new Host(Hostname);
 		
 		// Bind server to port and start listening:
 		DC.log('Binding...\n');
 		try {
 			socket = new Socket();
-			socket.bind(new Host(Hostname), Port);
+			socket.bind(info.host, Port);
 			socket.listen(3);
+			
 		} catch (z:Dynamic) {
 			// bind failed. some other server is probably hogging the specified port
 			DC.log('Could not bind to port.\n');
 			DC.log('Ensure that no server is running on port ' + Port + '.\n');
 			return;
+			
 		}
 		DC.log('Done.\n');
 		
-		// Initialize some values
-		info = new ServerInfo(this);
 		clients = [];
-		//console.onSend = function(t:String) { onChat(t, info); return true; };
 		Thread.create(threadAccept);
-		//console.open();
 	}
-	
 	
 	/** 
 	 * Sends given text to all active clients 

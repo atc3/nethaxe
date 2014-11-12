@@ -13,6 +13,10 @@ import pgr.dconsole.DC;
 
 class Client {
 	
+	// defaults
+	private static inline var DEFAULT_HOSTNAME:String = '127.0.0.1';
+	private static inline var DEFAULT_PORT:Int = 3000;
+	
 	var socket:Socket;
 	
 	public function new() {
