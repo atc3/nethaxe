@@ -24,7 +24,11 @@ class Server {
 	 */
 	public var info:ServerInfo;
 	
-	public function new(Hostname:String='127.0.0.1', Port:Int=3000) {
+	public function new(Hostname:String='', Port:Int=0) {
+		
+		// apply defaults
+		if (Hostname == '') Hostname = info.DEFAULT_HOSTNAME;
+		if (Port == 0) Port = info.DEFAULT_PORT;
 		
 		info.port = Port;
 		
