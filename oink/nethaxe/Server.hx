@@ -24,19 +24,20 @@ class Server {
 	 */
 	public var info:ServerInfo;
 	
-	public function new() {
-		var port = 3000;
+	public function new(Hostname:String='127.0.0.1', Port:Int=3000) {
+		
+		info.port = Port;
 		
 		// Bind server to port and start listening:
 		DC.log('Binding...\n');
 		try {
 			socket = new Socket();
-			socket.bind(new Host('127.0.0.1'), port);
+			socket.bind(new Host(Hostname), Port);
 			socket.listen(3);
 		} catch (z:Dynamic) {
 			// bind failed. some other server is probably hogging the specified port
 			DC.log('Could not bind to port.\n');
-			DC.log('Ensure that no server is running on port ' + port + '.\n');
+			DC.log('Ensure that no server is running on port ' + Port + '.\n');
 			return;
 		}
 		DC.log('Done.\n');
