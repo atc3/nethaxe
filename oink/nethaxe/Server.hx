@@ -44,21 +44,24 @@ class Server {
 		// Initialize some values
 		info = new ServerInfo(this);
 		clients = [];
-		//console = new RawEdit();
-		//console.prefix = '> ';
 		//console.onSend = function(t:String) { onChat(t, info); return true; };
 		Thread.create(threadAccept);
 		//console.open();
 	}
 	
 	
-	/** Sends given text to all active clients */
+	/** 
+	 * Sends given text to all active clients 
+	 **/
 	public function broadcast(text:String) {
 		for (cl in clients) {
 			cl.send(text);
 		}
 	}
-	/** Finds client(s) that match given name */
+	
+	/** 
+	 * Finds client(s) that match given name 
+	 **/
 	public function findClients(name:String) {
 		var r:Array<ClientInfo> = [];
 		name = name.toLowerCase();
@@ -67,47 +70,108 @@ class Server {
 		}
 		return r;
 	}
-	/** Chat message handler */
+	
+	/** 
+	 * Chat message handler 
+	 **/
 	public function onChat(text:String, cl:ClientInfo) {
+		// disallow empty input
 		if (text == '') return;
+		
+		// command handling
 		if (text.charAt(0) == '/') {
-			//console.write(Std.string(cl) + ' issued command: ' + text + '\n');
+			
 			DC.log(Std.string(cl) + ' issued command: ' + text + '\n');
+			broadcast(Std.string(cl) + ' issued command: ' + text + '\n');
+			
+			// regex for sanitation
 			text = text.substr(1);
 			var rx = ~/^(\w+) *(.*)/g;
-			if (!rx.match(text)) { cl.send('Not a valid command format.'); return; }
+			
+			// idiot proofing
+			if (!rx.match(text)) { 
+				cl.send('Not a valid command format.'); 
+				return; 
+			}
+			
+			// parse command and parameters
 			var cmd = rx.matched(1);
 			var par = rx.matched(2);
+			
 			switch (cmd) {
-				case 'list', 'online': // lists online users
-					var r = '', c = 0;
+				// lists online users
+				case 'list', 'online': 
+					
+					var r = '';
+					var c = 0;
+					
 					for (cl in clients) {
 						if (c++ != 0) r += ', ';
 						r += cl.name;
 					}
+					
 					r = 'Users online (' + c + '): ' + r + '\n';
 					cl.send(r);
-				case 'name', 'nick': // changes username
+				
+				// changes username
+				case 'name', 'nick':
+					
+					// sanitation and idiot proofing
 					rx = ~/^(\w+)/;
-					if (!rx.match(par)) { cl.send('Not a valid name.\n'); return; }
+					if (!rx.match(par)) { 
+						cl.send('Not a valid name.\n'); 
+						return; 
+					}
 					var name = rx.matched(1);
+					
 					// check if new name does not match with existing one:
 					var overlap = false;
-					for (cl in clients) { if (name == cl.name) { overlap = true; break; } }
-					if (overlap) { cl.send('Such name already exists.'); return; }
+					for (cl in clients) { 
+						if (name == cl.name) { 
+							overlap = true; 
+							break; 
+						} 
+					}
+					if (overlap) { 
+						cl.send('Such name already exists.'); 
+						return; 
+					}
+					
 					// inform participants:
-					//console.write(Std.string(cl) + ' is now known as ' + name + '.\n');
 					DC.log(Std.string(cl) + ' is now known as ' + name + '.\n');
+					broadcast(Std.string(cl) + ' is now known as ' + name + '.\n');
+					
 					if (cl.name == '') {
 						broadcast(name + ' connected.\n');
-					} else broadcast(cl.name + ' is now known as ' + name + '.\n');
+					} else {
+						broadcast(cl.name + ' is now known as ' + name + '.\n');
+					}
+					
+					// actual name assignment
 					cl.name = name;
+					
 					return;
-				case 'msg', 'm': // sends private message
+					
+				// sends private message
+				case 'msg', 'm':
+					
+					// sanitation and idiot proofing
 					rx = ~/^(\w+) *(.+)/;
-					if (!rx.match(par)) { cl.send('Invalid format.\n'); return; }
+					if (!rx.match(par)) { 
+						cl.send('Invalid format.\n'); 
+						return; 
+					}
+					
+					// find targeted client(s)
 					var rcs = findClients(rx.matched(1));
-					if (rcs.length == 0) { cl.send('User not found.\n'); return; }
+					
+					// not found
+					if (rcs.length == 0) { 
+						cl.send('User not found.\n'); 
+						return; 
+					}
+					
+					// send message
 					var msg = rx.matched(2);
 					for (rc in rcs) {
 						cl.send('[me > ' + rc.name + '] ' + msg + '\n');
@@ -115,12 +179,16 @@ class Server {
 					}
 			}
 		} else {
-			//console.write(Std.string(cl) + ': ' + text + '\n');
+			
+			// send message
 			DC.log(Std.string(cl) + ': ' + text + '\n');
 			broadcast((cl != null ? cl.name + ': ' : '') + text + '\n');
 		}
 	}
-	/** Accepts new sockets and spawns new threads for them */
+	
+	/** 
+	 * Accepts new sockets and spawns new threads for them 
+	 **/
 	function threadAccept() {
 		while (true) {
 			var sk = socket.accept();
@@ -130,24 +198,38 @@ class Server {
 			}
 		}
 	}
-	/** Creates a new thread function to handle given ClientInfo */
+	
+	/** 
+	 * Creates a new thread function to handle given ClientInfo 
+	 **/
 	function getThreadListen(cl:ClientInfo) {
 		return function() {
+			// keep track of this client
 			clients.push(cl);
-			//console.write(Std.string(cl) + ' connected.\n');
+			
 			DC.log(Std.string(cl) + ' connected.\n');
+			broadcast(Std.string(cl) + ' connected.\n');
+			
 			while (cl.active) {
 				try {
 					var text = cl.socket.input.readLine();
+					
+					//TODO: PROCESS INPUT TYPE
+					
 					if (cl.active) onChat(text, cl);
 				} catch (z:Dynamic) {
 					break;
 				}
 			}
-			//console.write(Std.string(cl) + ' timed out.\n');
+			
+			// if time out, clean up
 			DC.log(Std.string(cl) + ' timed out.\n');
+			broadcast(Std.string(cl) + ' timed out.\n');
+			
 			broadcast(cl.name + ' disconnected.\n');
 			clients.remove(cl);
+			
+			// attempt to destroy
 			try {
 				cl.socket.shutdown(true, true);
 				cl.socket.close();
