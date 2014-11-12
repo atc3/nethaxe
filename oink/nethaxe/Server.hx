@@ -234,7 +234,7 @@ class Server {
 				cl.socket.shutdown(true, true);
 				cl.socket.close();
 			} catch (e:Dynamic) {
-				
+				DC.log(e);
 			}
 		}
 	}

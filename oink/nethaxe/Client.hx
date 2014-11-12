@@ -12,11 +12,17 @@ import pgr.dconsole.DC;
  */
 
 class Client {
+	
 	var socket:Socket;
 	
 	public function new() {
+		
+		// server credentials
+		// TODO: these should be specified during creation via parameters
 		var ip = '127.0.0.1';
 		var port = 3000;
+		
+		// attempt to connect
 		DC.log('Connecting...\n');
 		try {
 			socket = new Socket();
@@ -27,39 +33,45 @@ class Client {
 			return;
 		}
 		
+		// assign us a random name
 		socket.output.writeString('/name User' + Std.int(Math.random() * 65536) + '\n');
-		//console = new RawEdit();
-		//console.prefix = '> ';
-		//console.onSend = onChatLine;
-		Thread.create(threadListen);
-		//console.open();
 		
+		// create listening thread
+		Thread.create(threadListen);
+		
+		
+		// DC functions
 		DC.registerFunction(onChatLine, "chat");
 	}
 	
-	/** Input handler */
+	/** 
+	 * Input handler 
+	 **/
 	function onChatLine(text:String):Bool {
 		try {
 			socket.write(text + '\n');
 		} catch (z:Dynamic) {
-			//console.write('Connection lost.\n');
-			//console.close();
+			
 			DC.log('Connection lost.\n');
+			socket.output.write('Connection lost.\n');
+			
 			return false;
 		}
 		return true;
 	}
-	/** Listener thread*/
+	
+	/** 
+	 * Listener thread
+	 **/
 	function threadListen() {
 		while (true) {
 			try {
 				var text = socket.input.readLine();
-				//console.write(text + '\n');
 				DC.log(text + '\n');
+				
 			} catch (z:Dynamic) {
-				//console.write('Connection lost.\n');
-				//console.close();
 				DC.log('Connection lost.\n');
+				socket.output.write('Connection lost.\n');
 				return;
 			}
 		}
