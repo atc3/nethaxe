@@ -13,27 +13,54 @@ import pgr.dconsole.DC;
 
 class Client {
 	
-	// defaults
+	/**
+	 * defaults
+	 */ 
 	private static inline var DEFAULT_HOSTNAME:String = '127.0.0.1';
 	private static inline var DEFAULT_PORT:Int = 3000;
 	
+	/**
+	 * hostname of server to connect to
+	 */ 
+	var hostname:String;
+	
+	/**
+	 * port of server to connect to
+	 */
+	var port:Int;
+	
+	/**
+	 * host object of server to connect to
+	 */
+	var host:Host;
+
+	/**
+	 * socket to handle IO
+	 */
 	var socket:Socket;
 	
-	public function new() {
+	
+	public function new(Hostname:String = '', Port:Int = 0) {
 		
-		// server credentials
-		// TODO: these should be specified during creation via parameters
-		var ip = '127.0.0.1';
-		var port = 3000;
+		// check defaults
+		if (Hostname == '') Hostname = DEFAULT_HOSTNAME;
+		if (Port == 0) Port = DEFAULT_PORT;
 		
 		// attempt to connect
 		DC.log('Connecting...\n');
 		try {
 			socket = new Socket();
-			socket.connect(new Host(ip), port);
-			DC.log('Connected to ' + ip + ':' + port + '\n');
+			
+			host = new Host(Hostname);
+			
+			socket.connect(host, Port);
+			DC.log('Connected to ' + Hostname + ':' + Port + '\n');
+			
+			hostname = Hostname;
+			port = Port;
+			
 		} catch (z:Dynamic) {
-			DC.log('Could not connect to ' + ip + ':' + port + '\n');
+			DC.log('Could not connect to ' + Hostname + ':' + Port + '\n');
 			return;
 		}
 		
