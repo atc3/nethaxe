@@ -33,8 +33,8 @@ class Server {
 		info = new ServerInfo(this);
 		
 		// apply defaults
-		if (Hostname == '') Hostname = ServerInfo.DEFAULT_HOSTNAME;
-		if (Port == 0) Port = ServerInfo.DEFAULT_PORT;
+		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
+		if (Port == 0) Port = Net.DEFAULT_PORT;
 		
 		info.port = Port;
 		info.hostname = Hostname;

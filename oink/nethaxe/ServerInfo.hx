@@ -8,10 +8,6 @@ import sys.net.Host;
  */
 class ServerInfo extends ClientInfo {
 	
-	// defaults
-	public static inline var DEFAULT_HOSTNAME:String = '127.0.0.1';
-	public static inline var DEFAULT_PORT:Int = 3000;
-	
 	// hostname server is bound to.
 	public var hostname:String;
 	// port server is bound to.

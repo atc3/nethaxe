@@ -11,14 +11,7 @@ import pgr.dconsole.DC;
  * @author YellowAfterlife
  */
 
-class Client {
-	
-	/**
-	 * defaults
-	 */ 
-	private static inline var DEFAULT_HOSTNAME:String = '127.0.0.1';
-	private static inline var DEFAULT_PORT:Int = 3000;
-	
+class Client {	
 	/**
 	 * hostname of server to connect to
 	 */ 
@@ -43,8 +36,8 @@ class Client {
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
 		// check defaults
-		if (Hostname == '') Hostname = DEFAULT_HOSTNAME;
-		if (Port == 0) Port = DEFAULT_PORT;
+		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
+		if (Port == 0) Port = Net.DEFAULT_PORT;
 		
 		// attempt to connect
 		DC.log('Connecting...\n');
