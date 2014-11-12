@@ -33,6 +33,8 @@ class Client {
 		//console.onSend = onChatLine;
 		Thread.create(threadListen);
 		//console.open();
+		
+		DC.registerFunction(onChatLine, "chat");
 	}
 	
 	/** Input handler */
