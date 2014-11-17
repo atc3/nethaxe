@@ -73,6 +73,7 @@ class Client {
 	 **/
 	function onChatLine(text:String):Bool {
 		try {
+			socket.write("XP/1.0/CHAT" + "\n");
 			socket.write(text + '\n');
 		} catch (z:Dynamic) {
 			
