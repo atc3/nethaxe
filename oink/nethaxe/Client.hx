@@ -31,8 +31,12 @@ class Client {
 	 */
 	var socket:Socket;
 	
+	var listen_thread:Thread;
+	
 	
 	public function new(Hostname:String = '', Port:Int = 0) {
+		
+		DC.log('Creating Client...\n');
 		
 		// check defaults
 		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
@@ -60,8 +64,7 @@ class Client {
 		onChatLine('/name User' + Std.int(Math.random() * 65536) + '\n');
 		
 		// create listening thread
-		Thread.create(threadListen);
-		
+		listen_thread = Thread.create(threadListen);
 		
 		// DC functions
 		DC.registerFunction(onChatLine, "chat");
@@ -87,17 +90,19 @@ class Client {
 	 * Listener thread
 	 **/
 	function threadListen() {
-		while (true) {
+		var thread_message = "";
+		while (thread_message != "client_finish") {
+			thread_message = Thread.readMessage(false);
+			
 			try {
 				var text = socket.input.readLine();
-				//DC.log(text + '\n');
 				
 				var msg_type = Net.xp_protocol_check(text);
 				if (msg_type != "") {
 					text = socket.input.readLine();
 					switch(msg_type) {
 						case "INFO":
-							DC.log('SERVERINFO >' + text + '\n');
+							DC.log('SERVERINFO > ' + text + '\n');
 						default:
 							// default behavior - log text and forget about it
 							DC.log(text + '\n');
@@ -109,5 +114,10 @@ class Client {
 				return;
 			}
 		}
+	}
+	
+	function destroy():Void {
+		listen_thread.sendMessage("client_finish");
+		socket.close();
 	}
 }
