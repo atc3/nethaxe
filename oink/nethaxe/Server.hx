@@ -227,7 +227,7 @@ class Server {
 					
 					if (cl.active) {
 					
-						var msg_type = xp_protocol_check(text);
+						var msg_type = Net.xp_protocol_check(text);
 						if (msg_type != "") {
 							text = cl.socket.input.readLine();
 							switch(msg_type) {
@@ -264,18 +264,4 @@ class Server {
 			}
 		}
 	}
-	
-	function xp_protocol_check(text:String):String {
-		// check protocol
-		var protocol = text.substr(0, 2);
-		if (protocol != "XP") {	return ""; }
-		
-		var r = ~/[A-Z]+/g;
-		var msg_type = text.substr(3);
-		
-		DC.log("MSG_TYPE: " + msg_type);
-		
-		return msg_type;
-	}
-	
 }
