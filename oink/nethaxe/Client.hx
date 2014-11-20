@@ -90,7 +90,19 @@ class Client {
 		while (true) {
 			try {
 				var text = socket.input.readLine();
-				DC.log(text + '\n');
+				//DC.log(text + '\n');
+				
+				var msg_type = Net.xp_protocol_check(text);
+				if (msg_type != "") {
+					text = socket.input.readLine();
+					switch(msg_type) {
+						case "INFO":
+							DC.log('SERVERINFO >' + text + '\n');
+						default:
+							// default behavior - log text and forget about it
+							DC.log(text + '\n');
+					}
+				}
 				
 			} catch (z:Dynamic) {
 				DC.log('Connection lost.\n');
@@ -98,6 +110,4 @@ class Client {
 			}
 		}
 	}
-	
-	
 }

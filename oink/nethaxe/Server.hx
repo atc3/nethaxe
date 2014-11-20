@@ -25,7 +25,6 @@ class Server {
 	 */
 	public var info:ServerInfo;
 	
-	
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
 		// Initialize some values
@@ -63,9 +62,10 @@ class Server {
 	/** 
 	 * Sends given text to all active clients 
 	 **/
-	public function broadcast(text:String) {
+	public function broadcast(Text:String, Type:String = "INFO") {
 		for (cl in clients) {
-			cl.send(text);
+			cl.send("XP/" + Type + "\n");
+			cl.send(Text);
 		}
 	}
 	
