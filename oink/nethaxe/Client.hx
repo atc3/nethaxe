@@ -8,7 +8,6 @@ import pgr.dconsole.DC;
 /**
  * Client.hx
  * Chat client program behaviour
- * @author YellowAfterlife
  */
 
 class Client {	
@@ -58,7 +57,7 @@ class Client {
 		}
 		
 		// assign us a random name
-		socket.output.writeString('/name User' + Std.int(Math.random() * 65536) + '\n');
+		onChatLine('/name User' + Std.int(Math.random() * 65536) + '\n');
 		
 		// create listening thread
 		Thread.create(threadListen);
@@ -73,12 +72,11 @@ class Client {
 	 **/
 	function onChatLine(text:String):Bool {
 		try {
-			socket.write("XP/1.0/CHAT" + "\n");
+			socket.write("XP/CHAT" + "\n");
 			socket.write(text + '\n');
 		} catch (z:Dynamic) {
 			
 			DC.log('Connection lost.\n');
-			socket.output.writeString('Connection lost.\n');
 			
 			return false;
 		}
@@ -96,7 +94,6 @@ class Client {
 				
 			} catch (z:Dynamic) {
 				DC.log('Connection lost.\n');
-				socket.output.writeString('Connection lost.\n');
 				return;
 			}
 		}

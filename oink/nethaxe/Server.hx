@@ -8,7 +8,6 @@ import pgr.dconsole.DC;
 /**
  * Server.hx
  * Server side of chat.
- * @author YellowAfterlife
  */
 class Server {
 	/**
@@ -223,11 +222,27 @@ class Server {
 			
 			while (cl.active) {
 				try {
+					
 					var text = cl.socket.input.readLine();
 					
-					//TODO: PROCESS INPUT TYPE
+					if (cl.active) {
 					
-					if (cl.active) onChat(text, cl);
+						var msg_type = xp_protocol_check(text);
+						if (msg_type != "") {
+							text = cl.socket.input.readLine();
+							switch(msg_type) {
+								case "CHAT":
+									onChat(text, cl);
+								default:
+									// default behavior - chat
+									onChat(text, cl);
+							}
+						} else {
+							// default behavior - chat
+							onChat(text, cl);
+						}
+					}
+					
 				} catch (z:Dynamic) {
 					break;
 				}
@@ -248,6 +263,19 @@ class Server {
 				DC.log(e);
 			}
 		}
+	}
+	
+	function xp_protocol_check(text:String):String {
+		// check protocol
+		var protocol = text.substr(0, 2);
+		if (protocol != "XP") {	return ""; }
+		
+		var r = ~/[A-Z]+/g;
+		var msg_type = text.substr(3);
+		
+		DC.log("MSG_TYPE: " + msg_type);
+		
+		return msg_type;
 	}
 	
 }
