@@ -25,6 +25,9 @@ class Server {
 	 */
 	public var info:ServerInfo;
 	
+	public var accept_thread:Thread;
+	public var listen_threads:Array<Thread>;
+	
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
 		// Initialize some values
@@ -58,7 +61,9 @@ class Server {
 		DC.log('Done.\n');
 		
 		clients = [];
-		Thread.create(threadAccept);
+		
+		accept_thread = Thread.create(threadAccept);
+		listen_threads = [];
 	}
 	
 	/** 
@@ -202,11 +207,16 @@ class Server {
 	 * Accepts new sockets and spawns new threads for them 
 	 **/
 	function threadAccept() {
-		while (true) {
+		var thread_message = "";
+		while (thread_message != "finish") {
+			thread_message = Thread.readMessage(false);
+			
 			var sk = socket.accept();
 			if (sk != null) {
 				var cl = new ClientInfo(this, sk);
-				Thread.create(getThreadListen(cl));
+				
+				var listen_thread = Thread.create(getThreadListen(cl));
+				listen_threads.push(listen_thread);
 			}
 		}
 	}
@@ -222,7 +232,10 @@ class Server {
 			DC.log(Std.string(cl) + ' connected.\n');
 			broadcast(Std.string(cl) + ' connected.\n');
 			
-			while (cl.active) {
+			var thread_message = "";
+			while (cl.active && thread_message != "finish") {
+				thread_message = Thread.readMessage(false);
+				
 				try {
 					
 					var text = cl.socket.input.readLine();
@@ -270,5 +283,32 @@ class Server {
 	
 	function destroy():Void {
 		
+		Net.server_active = false;
+		
+		// destroy threads
+		accept_thread.sendMessage("finish");
+		for (thread in listen_threads) {
+			thread.sendMessage("finish");
+		}
+		
+		// close sockets
+		for (cl in clients) {
+			try {
+				cl.socket.shutdown(true, true);
+				cl.socket.close();
+			} catch (e:Dynamic) {
+				DC.log(e);
+			}
+		}
+		try {
+			socket.shutdown(true, true);
+			socket.close();
+		} catch (e:Dynamic) {
+			DC.log(e);
+		}
+		
+		// clear vars
+		clients = [];
+		info = null;
 	}
 }
