@@ -10,6 +10,9 @@ class Net {
 	public static var server:Server;
 	public static var client:Client;
 	
+	public static var server_active:Bool = false;
+	public static var client_active:Bool = false;
+	
 	public static function create_server():Void {
 		server = new Server();
 	}
@@ -28,6 +31,10 @@ class Net {
 		DC.log("MSG_TYPE: " + msg_type);
 		
 		return msg_type;
+	}
+	
+	public static function destroy():Void {
+		
 	}
 	
 }

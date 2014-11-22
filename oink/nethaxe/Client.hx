@@ -42,23 +42,25 @@ class Client {
 		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
 		if (Port == 0) Port = Net.DEFAULT_PORT;
 		
+		socket = new Socket();	
+		host = new Host(Hostname);
+		
 		// attempt to connect
 		DC.log('Connecting...\n');
+		
+
 		try {
-			socket = new Socket();
-			
-			host = new Host(Hostname);
-			
 			socket.connect(host, Port);
-			DC.log('Connected to ' + Hostname + ':' + Port + '\n');
-			
-			hostname = Hostname;
-			port = Port;
-			
 		} catch (z:Dynamic) {
 			DC.log('Could not connect to ' + Hostname + ':' + Port + '\n');
 			return;
 		}
+		
+		Net.client_active = true;
+		DC.log('Connected to ' + Hostname + ':' + Port + '\n');
+			
+		hostname = Hostname;
+		port = Port;
 		
 		// assign us a random name
 		onChatLine('/name User' + Std.int(Math.random() * 65536) + '\n');
@@ -117,6 +119,7 @@ class Client {
 	}
 	
 	function destroy():Void {
+		Net.client_active = false;
 		listen_thread.sendMessage("client_finish");
 		socket.close();
 	}

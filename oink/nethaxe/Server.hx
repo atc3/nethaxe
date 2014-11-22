@@ -44,7 +44,9 @@ class Server {
 		try {
 			socket = new Socket();
 			socket.bind(info.host, Port);
-			socket.listen(3);
+			socket.listen(4);
+			
+			Net.server_active = true;
 			
 		} catch (z:Dynamic) {
 			// bind failed. some other server is probably hogging the specified port
@@ -263,5 +265,10 @@ class Server {
 				DC.log(e);
 			}
 		}
+	}
+	
+	
+	function destroy():Void {
+		
 	}
 }
