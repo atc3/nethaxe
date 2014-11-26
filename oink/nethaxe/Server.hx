@@ -299,6 +299,7 @@ class Server {
 			} catch (e:Dynamic) {
 				DC.log(e);
 			}
+			cl = null;
 		}
 		try {
 			socket.shutdown(true, true);

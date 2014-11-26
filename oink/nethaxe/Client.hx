@@ -120,7 +120,15 @@ class Client {
 	
 	function destroy():Void {
 		Net.client_active = false;
+		
 		listen_thread.sendMessage("client_finish");
-		socket.close();
+		
+		try {
+			socket.shutdown(true, true);
+			socket.close();
+		} catch (e:Dynamic) {
+			DC.log(e);
+		}
+			
 	}
 }
