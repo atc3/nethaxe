@@ -244,13 +244,19 @@ class Server {
 					
 						var msg_type = Net.xp_protocol_check(text);
 						if (msg_type != "") {
-							text = cl.socket.input.readLine();
 							switch(msg_type) {
 								case "CHAT":
+									text = cl.socket.input.readLine();
 									onChat(text, cl);
+								case "PING":
+									DC.log(cl.name + " pinged\n");
+									DC.log("sending PONG to " + cl.name);
+									
+									cl.send("XP/PONG" + "\n");
 								default:
-									// default behavior - chat
-									onChat(text, cl);
+									// default behavior
+									DC.log("invalid XP type\n");
+									DC.log("Message Type: " + msg_type);
 							}
 						} else {
 							// default behavior - chat

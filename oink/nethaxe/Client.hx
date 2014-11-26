@@ -88,6 +88,16 @@ class Client {
 		return true;
 	}
 	
+	public function ping() {
+		try {
+			DC.log("pinging server...");
+			socket.write("XP/PING" + "\n");
+		} catch (z:Dynamic) {
+			DC.log("connection lost.\n");
+		}
+		
+	}
+	
 	/** 
 	 * Listener thread
 	 **/
@@ -101,13 +111,16 @@ class Client {
 				
 				var msg_type = Net.xp_protocol_check(text);
 				if (msg_type != "") {
-					text = socket.input.readLine();
 					switch(msg_type) {
 						case "INFO":
+							text = socket.input.readLine();
 							DC.log('SERVERINFO > ' + text + '\n');
+						case "PONG":
+							DC.log("server ponged");
 						default:
-							// default behavior - log text and forget about it
-							DC.log(text + '\n');
+							// default behavior
+							DC.log("invalid XP type\n");
+							DC.log("Message Type: " + msg_type);
 					}
 				}
 				
