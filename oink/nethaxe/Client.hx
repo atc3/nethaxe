@@ -33,10 +33,13 @@ class Client {
 	
 	var listen_thread:Thread;
 	
+	var event_map:Map<String, Dynamic>;
+	var callback_func:Dynamic;
+	
 	
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
-		DC.log('Creating Client...\n');
+		trace('Creating Client...\n');
 		
 		// check defaults
 		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
@@ -46,18 +49,18 @@ class Client {
 		host = new Host(Hostname);
 		
 		// attempt to connect
-		DC.log('Connecting...\n');
+		trace('Connecting...\n');
 		
 
 		try {
 			socket.connect(host, Port);
 		} catch (z:Dynamic) {
-			DC.log('Could not connect to ' + Hostname + ':' + Port + '\n');
+			trace('Could not connect to ' + Hostname + ':' + Port + '\n');
 			return;
 		}
 		
 		Net.client_active = true;
-		DC.log('Connected to ' + Hostname + ':' + Port + '\n');
+		trace('Connected to ' + Hostname + ':' + Port + '\n');
 			
 		hostname = Hostname;
 		port = Port;
@@ -67,6 +70,8 @@ class Client {
 		
 		// create listening thread
 		listen_thread = Thread.create(threadListen);
+		
+		event_map = new Map<String, Dynamic>();
 		
 		// DC functions
 		DC.registerFunction(onChatLine, "chat");
@@ -81,7 +86,7 @@ class Client {
 			socket.write(text + '\n');
 		} catch (z:Dynamic) {
 			
-			DC.log('Connection lost.\n');
+			trace('Connection lost.\n');
 			
 			return false;
 		}
@@ -90,12 +95,22 @@ class Client {
 	
 	public function ping() {
 		try {
-			DC.log("pinging server...");
+			trace("pinging server...");
 			socket.write("XP/PING" + "\n");
 		} catch (z:Dynamic) {
-			DC.log("connection lost.\n");
+			trace("connection lost.\n");
 		}
-		
+	}
+	
+	public function send_player_location(X:Float, Y:Float) {
+		//trace("sending x:" + X + " y:" + Y);
+		try {
+			socket.write("XP/PLAYERLOC" + "\n");
+			socket.output.writeFloat(X);
+			socket.output.writeFloat(Y);
+		} catch (e:Dynamic) {
+			trace(e);
+		}
 	}
 	
 	/** 
@@ -106,29 +121,60 @@ class Client {
 		while (thread_message != "client_finish") {
 			thread_message = Thread.readMessage(false);
 			
+			var text;
 			try {
-				var text = socket.input.readLine();
-				
-				var msg_type = Net.xp_protocol_check(text);
-				if (msg_type != "") {
-					switch(msg_type) {
-						case "INFO":
-							text = socket.input.readLine();
-							DC.log('SERVERINFO > ' + text + '\n');
-						case "PONG":
-							DC.log("server ponged");
-						default:
-							// default behavior
-							DC.log("invalid XP type\n");
-							DC.log("Message Type: " + msg_type);
-					}
-				}
-				
+				text = socket.input.readLine();
 			} catch (z:Dynamic) {
-				DC.log('Connection lost.\n');
+				trace('Connection lost.\n');
 				return;
 			}
+			var msg_type = Net.xp_protocol_check(text);
+			if (msg_type != "") {
+				switch(msg_type) {
+					case "INFO":
+						try {
+							text = socket.input.readLine();
+						} catch (z:Dynamic) {
+							trace('Connection lost.\n');
+							return;
+						}
+						trace('SERVERINFO > ' + text + '\n');
+					case "PONG":
+						//trace("server ponged");
+						on_trigger("PONG", []);
+					case "REMOTEPLAYERLOC":
+						try {
+							var client_name = socket.input.readLine();
+							var remote_x = socket.input.readFloat();
+							var remote_y = socket.input.readFloat();
+						} catch (z:Dynamic) {
+							trace('Connection lost.\n');
+							return;
+						}
+					default:
+						// default behavior
+						trace("invalid XP type\n");
+						trace("Message Type: " + msg_type);
+				}
+			}
 		}
+	}
+	
+	public function on(Event:String, Callback:Dynamic) {
+		if (!Reflect.isFunction(Callback)) {
+			trace("invalid on bind");
+			return;
+		}
+		event_map.set(Event, Callback);
+	}
+	private function on_trigger(Event:String, Args:Array<Dynamic>) {
+		callback_func = event_map.get(Event);
+		if (!Reflect.isFunction(callback_func)) {
+			trace("invalid on call");
+			return;
+		}
+		Reflect.callMethod(Net.client, Reflect.field(Net.client, "callback_func"), Args);
+		//callback_func(Args);
 	}
 	
 	function destroy():Void {
@@ -140,7 +186,7 @@ class Client {
 			socket.shutdown(true, true);
 			socket.close();
 		} catch (e:Dynamic) {
-			DC.log(e);
+			trace(e);
 		}
 			
 	}

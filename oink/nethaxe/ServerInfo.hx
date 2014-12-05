@@ -24,6 +24,6 @@ class ServerInfo extends ClientInfo {
 		return name + '(console)';
 	}
 	override public function send(text:String) {
-		DC.log(text);
+		trace(text);
 	}
 }

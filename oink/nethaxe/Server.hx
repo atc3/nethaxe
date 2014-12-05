@@ -43,7 +43,7 @@ class Server {
 		info.host = new Host(Hostname);
 		
 		// Bind server to port and start listening:
-		DC.log('Binding...\n');
+		trace('Binding...\n');
 		try {
 			socket = new Socket();
 			socket.bind(info.host, Port);
@@ -53,12 +53,12 @@ class Server {
 			
 		} catch (z:Dynamic) {
 			// bind failed. some other server is probably hogging the specified port
-			DC.log('Could not bind to port.\n');
-			DC.log('Ensure that no server is running on port ' + Port + '.\n');
+			trace('Could not bind to port.\n');
+			trace('Ensure that no server is running on port ' + Port + '.\n');
 			return;
 			
 		}
-		DC.log('Done.\n');
+		trace('Done.\n');
 		
 		clients = [];
 		
@@ -98,7 +98,7 @@ class Server {
 		// command handling
 		if (text.charAt(0) == '/') {
 			
-			DC.log(Std.string(cl) + ' issued command: ' + text + '\n');
+			trace(Std.string(cl) + ' issued command: ' + text + '\n');
 			broadcast(Std.string(cl) + ' issued command: ' + text + '\n');
 			
 			// regex for sanitation
@@ -155,7 +155,7 @@ class Server {
 					}
 					
 					// inform participants:
-					DC.log(Std.string(cl) + ' is now known as ' + name + '.\n');
+					trace(Std.string(cl) + ' is now known as ' + name + '.\n');
 					broadcast(Std.string(cl) + ' is now known as ' + name + '.\n');
 					
 					if (cl.name == '') {
@@ -198,7 +198,7 @@ class Server {
 		} else {
 			
 			// send message
-			DC.log(Std.string(cl) + ': ' + text + '\n');
+			trace(Std.string(cl) + ': ' + text + '\n');
 			broadcast((cl != null ? cl.name + ': ' : '') + text + '\n');
 		}
 	}
@@ -229,7 +229,7 @@ class Server {
 			// keep track of this client
 			clients.push(cl);
 			
-			DC.log(Std.string(cl) + ' connected.\n');
+			trace(Std.string(cl) + ' connected.\n');
 			broadcast(Std.string(cl) + ' connected.\n');
 			
 			var thread_message = "";
@@ -249,14 +249,29 @@ class Server {
 									text = cl.socket.input.readLine();
 									onChat(text, cl);
 								case "PING":
-									DC.log(cl.name + " pinged\n");
-									DC.log("sending PONG to " + cl.name);
+									trace(cl.name + " pinged\n");
+									trace("sending PONG to " + cl.name);
 									
 									cl.send("XP/PONG" + "\n");
+								case "PLAYERLOC":
+									var x = cl.socket.input.readFloat();
+									var y = cl.socket.input.readFloat();
+									
+									//trace("received x:" + x + " y:" + y);
+									
+									for (client in clients) {
+										if (client.name != cl.name) {
+											cl.send("XP/REMOTEPLAYERLOC" + "\n");
+											cl.socket.output.writeString(cl.name + "\n");
+											cl.socket.output.writeFloat(x);
+											cl.socket.output.writeFloat(y);
+										}
+									}
+									
 								default:
 									// default behavior
-									DC.log("invalid XP type\n");
-									DC.log("Message Type: " + msg_type);
+									trace("invalid XP type\n");
+									trace("Message Type: " + msg_type);
 							}
 						} else {
 							// default behavior - chat
@@ -270,7 +285,7 @@ class Server {
 			}
 			
 			// if time out, clean up
-			DC.log(Std.string(cl) + ' timed out.\n');
+			trace(Std.string(cl) + ' timed out.\n');
 			broadcast(Std.string(cl) + ' timed out.\n');
 			
 			broadcast(cl.name + ' disconnected.\n');
@@ -281,7 +296,7 @@ class Server {
 				cl.socket.shutdown(true, true);
 				cl.socket.close();
 			} catch (e:Dynamic) {
-				DC.log(e);
+				trace(e);
 			}
 		}
 	}
@@ -303,7 +318,7 @@ class Server {
 				cl.socket.shutdown(true, true);
 				cl.socket.close();
 			} catch (e:Dynamic) {
-				DC.log(e);
+				trace(e);
 			}
 			cl = null;
 		}
@@ -311,7 +326,7 @@ class Server {
 			socket.shutdown(true, true);
 			socket.close();
 		} catch (e:Dynamic) {
-			DC.log(e);
+			trace(e);
 		}
 		
 		// clear vars

@@ -28,7 +28,7 @@ class Net {
 		var r = ~/[A-Z]+/g;
 		var msg_type = text.substr(3);
 		
-		DC.log("MSG_TYPE: " + msg_type);
+		trace("MSG_TYPE: " + msg_type);
 		
 		return msg_type;
 	}
