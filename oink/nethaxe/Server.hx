@@ -253,19 +253,18 @@ class Server {
 									trace("sending PONG to " + cl.name);
 									
 									cl.send("XP/PONG" + "\n");
-								case "PLAYERLOC":
+								case "REMOTEPLAYERLOC":
+									var id = cl.socket.input.readInt32();
 									var x = cl.socket.input.readFloat();
 									var y = cl.socket.input.readFloat();
 									
-									//trace("received x:" + x + " y:" + y);
-									
 									for (client in clients) {
-										if (client.name != cl.name) {
-											cl.send("XP/REMOTEPLAYERLOC" + "\n");
-											cl.socket.output.writeString(cl.name + "\n");
-											cl.socket.output.writeFloat(x);
-											cl.socket.output.writeFloat(y);
-										}
+										//if (client.name != cl.name) {
+											client.send("XP/REMOTEPLAYERLOC" + "\n");
+											client.socket.output.writeInt32(id);
+											client.socket.output.writeFloat(x);
+											client.socket.output.writeFloat(y);
+										//}
 									}
 									
 								default:

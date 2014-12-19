@@ -36,6 +36,8 @@ class Client {
 	var event_map:Map<String, Dynamic>;
 	var callback_func:Dynamic;
 	
+	public var id:Int;
+	
 	
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
@@ -66,7 +68,8 @@ class Client {
 		port = Port;
 		
 		// assign us a random name
-		onChatLine('/name User' + Std.int(Math.random() * 65536) + '\n');
+		id = Std.int(Math.random() * 65536);
+		onChatLine('/name User' + id + '\n');
 		
 		// create listening thread
 		listen_thread = Thread.create(threadListen);
@@ -103,13 +106,14 @@ class Client {
 	}
 	
 	public function send_player_location(X:Float, Y:Float) {
-		//trace("sending x:" + X + " y:" + Y);
+		trace("sending x:" + X + " y:" + Y);
 		try {
-			socket.write("XP/PLAYERLOC" + "\n");
+			socket.output.writeString("XP/REMOTEPLAYERLOC" + "\n");
+			socket.output.writeInt32(this.id);
 			socket.output.writeFloat(X);
 			socket.output.writeFloat(Y);
-		} catch (e:Dynamic) {
-			trace(e);
+		} catch (z:Dynamic) {
+			trace("connection lost.\n");
 		}
 	}
 	
@@ -141,16 +145,18 @@ class Client {
 						trace('SERVERINFO > ' + text + '\n');
 					case "PONG":
 						//trace("server ponged");
-						on_trigger("PONG", []);
+						on_trigger("PONG", ["this","shit"]);
 					case "REMOTEPLAYERLOC":
+						var client_name, remote_x, remote_y;
 						try {
-							var client_name = socket.input.readLine();
-							var remote_x = socket.input.readFloat();
-							var remote_y = socket.input.readFloat();
+							client_name = socket.input.readInt32();
+							remote_x = socket.input.readFloat();
+							remote_y = socket.input.readFloat();
 						} catch (z:Dynamic) {
 							trace('Connection lost.\n');
 							return;
 						}
+						on_trigger("REMOTEPLAYERLOC", [client_name,remote_x,remote_y]);
 					default:
 						// default behavior
 						trace("invalid XP type\n");

@@ -1,5 +1,7 @@
 package oink.nethaxe;
 
+import haxe.io.Bytes;
+import haxe.io.BytesBuffer;
 import pgr.dconsole.DC;
 
 class Net {
@@ -12,6 +14,10 @@ class Net {
 	
 	public static var server_active:Bool = false;
 	public static var client_active:Bool = false;
+	
+	public static function init():Void {
+		
+	}
 	
 	public static function create_server():Void {
 		server = new Server();
@@ -28,7 +34,7 @@ class Net {
 		var r = ~/[A-Z]+/g;
 		var msg_type = text.substr(3);
 		
-		trace("MSG_TYPE: " + msg_type);
+		//trace("MSG_TYPE: " + msg_type);
 		
 		return msg_type;
 	}
