@@ -39,6 +39,25 @@ class Net {
 		return msg_type;
 	}
 	
+	/**
+	 * helper function to verify arguments of bson packets before processing
+	 * @param	Packet BSON packet to check
+	 * @param	Fields Array of fields to check
+	 * @return Array of fields that exist in Packet
+	 */
+	public static function verify_fields(Packet:Dynamic, Fields:Array<String>):Array<String> {
+		if (Packet == null) return null;
+		if (Fields.length <= 0) return null;
+		
+		var out:Array<String> = [];
+		
+		for (field in Fields) {
+			if (Reflect.hasField(Packet, field)) out.push(field);
+		}
+		
+		return out;
+	}
+	
 	public static function destroy():Void {
 		
 	}
