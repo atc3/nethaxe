@@ -42,11 +42,9 @@ class Client {
 	
 	public var id:Int;
 	
-	
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
 		trace('Creating Client...\n');
-		
 		// check defaults
 		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
 		if (Port == 0) Port = Net.DEFAULT_PORT;
@@ -56,8 +54,6 @@ class Client {
 		
 		// attempt to connect
 		trace('Connecting...\n');
-		
-
 		try {
 			socket.connect(host, Port);
 		} catch (z:Dynamic) {
@@ -67,7 +63,6 @@ class Client {
 		
 		Net.client_active = true;
 		trace('Connected to ' + Hostname + ':' + Port + '\n');
-			
 		hostname = Hostname;
 		port = Port;
 		
@@ -75,7 +70,6 @@ class Client {
 		id = Std.int(Math.random() * 65536);
 		onChatLine('/name User' + id + '\n');
 		
-		// create listening thread
 		listen_thread = Thread.create(threadListen);
 		
 		event_map = new Map<String, Dynamic>();
@@ -83,9 +77,65 @@ class Client {
 		// DC functions
 		DC.registerFunction(onChatLine, "chat");
 		
-		
+		// basic on functions
 		on("INFO", on_info);
 		on("PONG", on_pong);
+	}
+	
+	/** 
+	 * Listener thread
+	 **/
+	function threadListen() {
+		var thread_message = "";
+		while (thread_message != "client_finish") {
+			thread_message = Thread.readMessage(false);
+			
+			var packet = BSON.decode(socket.input);
+			trace(packet);
+			
+			// skip empty packet
+			if(Reflect.fields(packet).length <= 0)
+				continue;
+			
+			var action = packet.action;
+			
+			if (event_map.exists(action)) {
+				on_trigger(action, [packet]);
+			} else {
+				trace("invalid XP type\n");
+				trace("Message Type: " + action);
+			}
+		}
+	}
+	
+	public function on(Event:String, Callback:Dynamic) {
+		if (!Reflect.isFunction(Callback)) {
+			trace("invalid on bind");
+			return;
+		}
+		event_map.set(Event, Callback);
+	}
+	private function on_trigger(Event:String, Args:Array<Dynamic>) {
+		callback_func = event_map.get(Event);
+		if (!Reflect.isFunction(callback_func)) {
+			trace("invalid on call");
+			return;
+		}
+		Reflect.callMethod(Net.client, Reflect.field(Net.client, "callback_func"), Args);
+		//callback_func(Args);
+	}
+	
+	function destroy():Void {
+		Net.client_active = false;
+		
+		listen_thread.sendMessage("client_finish");
+		
+		try {
+			socket.shutdown(true, true);
+			socket.close();
+		} catch (e:Dynamic) {
+			trace(e);
+		}		
 	}
 	
 	/** 
@@ -138,102 +188,6 @@ class Client {
 		} catch (z:Dynamic) {
 			trace("connection lost.\n");
 		}
-	}
-	
-	/** 
-	 * Listener thread
-	 **/
-	function threadListen() {
-		var thread_message = "";
-		while (thread_message != "client_finish") {
-			thread_message = Thread.readMessage(false);
-			
-			var packet = BSON.decode(socket.input);
-			trace(packet);
-			
-			// skip empty packet
-			if(Reflect.fields(packet).length <= 0)
-				continue;
-			
-			//var packet_id = packet._id;
-			var action = packet.action;
-			
-			if (event_map.exists(action)) {
-				on_trigger(action, [packet]);
-			} else {
-				trace("invalid XP type\n");
-				trace("Message Type: " + action);
-			}
-			
-			/*var text;
-			try {
-				text = socket.input.readLine();
-			} catch (z:Dynamic) {
-				trace('Connection lost.\n');
-				return;
-			}
-			var msg_type = Net.xp_protocol_check(text);
-			if (msg_type != "") {
-				switch(msg_type) {
-					case "INFO":
-						try {
-							text = socket.input.readLine();
-						} catch (z:Dynamic) {
-							trace('Connection lost.\n');
-							return;
-						}
-						trace('SERVERINFO > ' + text + '\n');
-					case "PONG":
-						//trace("server ponged");
-						on_trigger("PONG", ["this","shit"]);
-					case "REMOTEPLAYERLOC":
-						var client_name, remote_x, remote_y;
-						try {
-							client_name = socket.input.readInt32();
-							remote_x = socket.input.readFloat();
-							remote_y = socket.input.readFloat();
-						} catch (z:Dynamic) {
-							trace('Connection lost.\n');
-							return;
-						}
-						on_trigger("REMOTEPLAYERLOC", [client_name,remote_x,remote_y]);
-					default:
-						// default behavior
-						trace("invalid XP type\n");
-						trace("Message Type: " + msg_type);
-				}
-			}*/
-		}
-	}
-	
-	public function on(Event:String, Callback:Dynamic) {
-		if (!Reflect.isFunction(Callback)) {
-			trace("invalid on bind");
-			return;
-		}
-		event_map.set(Event, Callback);
-	}
-	private function on_trigger(Event:String, Args:Array<Dynamic>) {
-		callback_func = event_map.get(Event);
-		if (!Reflect.isFunction(callback_func)) {
-			trace("invalid on call");
-			return;
-		}
-		Reflect.callMethod(Net.client, Reflect.field(Net.client, "callback_func"), Args);
-		//callback_func(Args);
-	}
-	
-	function destroy():Void {
-		Net.client_active = false;
-		
-		listen_thread.sendMessage("client_finish");
-		
-		try {
-			socket.shutdown(true, true);
-			socket.close();
-		} catch (e:Dynamic) {
-			trace(e);
-		}		
 	}
 	
 	function on_info(packet) {
