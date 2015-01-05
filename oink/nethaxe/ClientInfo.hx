@@ -1,5 +1,8 @@
 package oink.nethaxe;
 
+import haxe.io.Bytes;
+import org.bsonspec.BSON;
+import org.bsonspec.ObjectID;
 import sys.net.Socket;
 
 /**
@@ -21,9 +24,24 @@ class ClientInfo {
 		var pstr = Std.string(peer.host) + ':' + peer.port;
 		return (name == null || name == '') ? pstr : (name + '(' + pstr + ')');
 	}
-	public function send(text:String) {
+	public function send(Text:String, Action:String = "INFO") {
+		
+		var send_packet = BSON.encode({
+			_id: new ObjectID()
+			, action: Action
+			, text: Text
+		});
+		
 		try {
-			socket.output.writeString(text);
+			//socket.output.writeString(text);
+			socket.output.write(send_packet);
+		} catch (z:Dynamic) {
+			active = false;
+		}
+	}
+	public function sendBytes(s:Bytes) {
+		try {
+			socket.output.write(s);
 		} catch (z:Dynamic) {
 			active = false;
 		}

@@ -1,6 +1,10 @@
 package oink.nethaxe;
 
 import cpp.vm.Thread;
+import haxe.io.Bytes;
+import haxe.io.BytesInput;
+import org.bsonspec.BSON;
+import org.bsonspec.ObjectID;
 import sys.net.Host;
 import sys.net.Socket;
 import pgr.dconsole.DC;
@@ -84,34 +88,49 @@ class Client {
 	 * Input handler 
 	 **/
 	function onChatLine(text:String):Bool {
+		
+		var chat_packet = BSON.encode({
+			_id: new ObjectID()
+			, action: "CHAT"
+			, text: text
+		});
+		
 		try {
-			socket.write("XP/CHAT" + "\n");
-			socket.write(text + '\n');
+			socket.output.write(chat_packet);
 		} catch (z:Dynamic) {
-			
 			trace('Connection lost.\n');
-			
 			return false;
 		}
 		return true;
 	}
 	
 	public function ping() {
+		
+		var ping_packet = BSON.encode({
+			_id: new ObjectID()
+			, action: "PING"
+		});
+		
 		try {
 			trace("pinging server...");
-			socket.write("XP/PING" + "\n");
+			socket.output.write(ping_packet);
 		} catch (z:Dynamic) {
 			trace("connection lost.\n");
 		}
 	}
 	
 	public function send_player_location(X:Float, Y:Float) {
-		trace("sending x:" + X + " y:" + Y);
+		
+		var location_packet = BSON.encode({
+			_id: new ObjectID()
+			, action: "REMOTEPLAYERLOC"
+			, client_id: this.id
+			, x: X
+			, y: Y
+		});
+		
 		try {
-			socket.output.writeString("XP/REMOTEPLAYERLOC" + "\n");
-			socket.output.writeInt32(this.id);
-			socket.output.writeFloat(X);
-			socket.output.writeFloat(Y);
+			socket.output.write(location_packet);
 		} catch (z:Dynamic) {
 			trace("connection lost.\n");
 		}
@@ -125,7 +144,19 @@ class Client {
 		while (thread_message != "client_finish") {
 			thread_message = Thread.readMessage(false);
 			
-			var text;
+			var packet = BSON.decode(socket.input);
+			trace(packet);
+			
+			// skip empty packet
+			if(Reflect.fields(packet).length <= 0)
+				continue;
+			
+			//var packet_id = packet._id;
+			var action = packet.action;
+			
+			//if (action != null) trace(packet);
+			
+			/*var text;
 			try {
 				text = socket.input.readLine();
 			} catch (z:Dynamic) {
@@ -162,7 +193,7 @@ class Client {
 						trace("invalid XP type\n");
 						trace("Message Type: " + msg_type);
 				}
-			}
+			}*/
 		}
 	}
 	

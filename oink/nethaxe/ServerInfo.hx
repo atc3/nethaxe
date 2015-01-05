@@ -23,7 +23,7 @@ class ServerInfo extends ClientInfo {
 	override public function toString():String {
 		return name + '(console)';
 	}
-	override public function send(text:String) {
-		trace(text);
+	override public function send(Text:String, Action:String = "INFO") {
+		trace(Text);
 	}
 }

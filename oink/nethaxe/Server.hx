@@ -1,9 +1,14 @@
 package oink.nethaxe;
 
 import cpp.vm.Thread;
+import haxe.io.BytesInput;
+import haxe.io.Bytes;
+import org.bsonspec.ObjectID;
 import sys.net.Host;
 import sys.net.Socket;
 import pgr.dconsole.DC;
+
+import org.bsonspec.BSON;
 
 /**
  * Server.hx
@@ -70,8 +75,9 @@ class Server {
 	 * Sends given text to all active clients 
 	 **/
 	public function broadcast(Text:String, Type:String = "INFO") {
+		
 		for (cl in clients) {
-			cl.send("XP/" + Type + "\n");
+			//cl.send("XP/" + Type + "\n");
 			cl.send(Text);
 		}
 	}
@@ -236,7 +242,23 @@ class Server {
 			while (cl.active && thread_message != "finish") {
 				thread_message = Thread.readMessage(false);
 				
-				try {
+				if(cl.active) {
+					var packet = BSON.decode(cl.socket.input);
+					trace(packet);
+					
+					// skip empty packet
+					if(Reflect.fields(packet).length <= 0)
+						continue;
+					
+					//var packet_id = packet._id;
+					//var action = packet.action;
+					
+					//if (packet.action != null) trace(packet);
+					
+					//trace(action);
+				}
+				
+				/*try {
 					
 					var text = cl.socket.input.readLine();
 					
@@ -280,7 +302,7 @@ class Server {
 					
 				} catch (z:Dynamic) {
 					break;
-				}
+				}*/
 			}
 			
 			// if time out, clean up
