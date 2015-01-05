@@ -103,7 +103,8 @@ class Client {
 				on_trigger(action, [packet]);
 			} else {
 				trace("invalid XP type\n");
-				trace("Message Type: " + action);
+				trace("Message Type: " + action + "\n");
+				trace(packet);
 			}
 		}
 	}
@@ -122,7 +123,6 @@ class Client {
 			return;
 		}
 		Reflect.callMethod(Net.client, Reflect.field(Net.client, "callback_func"), Args);
-		//callback_func(Args);
 	}
 	
 	function destroy():Void {
