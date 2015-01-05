@@ -26,19 +26,6 @@ class Net {
 		client = new Client();
 	}
 	
-	public static function xp_protocol_check(text:String):String {
-		// check protocol
-		var protocol = text.substr(0, 2);
-		if (protocol != "XP") {	return ""; }
-		
-		var r = ~/[A-Z]+/g;
-		var msg_type = text.substr(3);
-		
-		//trace("MSG_TYPE: " + msg_type);
-		
-		return msg_type;
-	}
-	
 	/**
 	 * helper function to verify arguments of bson packets before processing
 	 * @param	Packet BSON packet to check
