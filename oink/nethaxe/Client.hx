@@ -44,7 +44,7 @@ class Client {
 	
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
-		trace('Creating Client...\n');
+		trace('Creating Client...');
 		// check defaults
 		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
 		if (Port == 0) Port = Net.DEFAULT_PORT;
@@ -53,33 +53,34 @@ class Client {
 		host = new Host(Hostname);
 		
 		// attempt to connect
-		trace('Connecting...\n');
+		trace('Connecting...');
 		try {
 			socket.connect(host, Port);
 		} catch (z:Dynamic) {
-			trace('Could not connect to ' + Hostname + ':' + Port + '\n');
+			trace('Could not connect to ' + Hostname + ':' + Port);
 			return;
 		}
 		
 		Net.client_active = true;
-		trace('Connected to ' + Hostname + ':' + Port + '\n');
+		trace('Connected to ' + Hostname + ':' + Port);
 		hostname = Hostname;
 		port = Port;
 		
 		// assign us a random name
 		id = Std.int(Math.random() * 65536);
-		onChatLine('/name User' + id + '\n');
-		
-		listen_thread = Thread.create(threadListen);
+		onChatLine('/name User' + id);
 		
 		event_map = new Map<String, Dynamic>();
-		
-		// DC functions
-		DC.registerFunction(onChatLine, "chat");
 		
 		// basic on functions
 		on("INFO", on_info);
 		on("PONG", on_pong);
+		
+		listen_thread = Thread.create(threadListen);
+		
+		// DC functions
+		DC.registerFunction(onChatLine, "chat");
+		
 	}
 	
 	/** 
@@ -91,19 +92,21 @@ class Client {
 			thread_message = Thread.readMessage(false);
 			
 			var packet = BSON.decode(socket.input);
-			trace(packet);
+			
 			
 			// skip empty packet
-			if(Reflect.fields(packet).length <= 0)
+			if (Reflect.fields(packet).length <= 0)
 				continue;
+				
+			trace(packet);
 			
 			var action = packet.action;
 			
 			if (event_map.exists(action)) {
 				on_trigger(action, [packet]);
 			} else {
-				trace("invalid XP type\n");
-				trace("Message Type: " + action + "\n");
+				trace("invalid XP type");
+				trace("Message Type: " + action);
 				trace(packet);
 			}
 		}
@@ -111,7 +114,7 @@ class Client {
 	
 	public function on(Event:String, Callback:Dynamic) {
 		if (!Reflect.isFunction(Callback)) {
-			trace("invalid on bind");
+			trace("callback is not a function");
 			return;
 		}
 		event_map.set(Event, Callback);
@@ -152,7 +155,7 @@ class Client {
 		try {
 			socket.output.write(chat_packet);
 		} catch (z:Dynamic) {
-			trace('Connection lost.\n');
+			trace('Connection lost.');
 			return false;
 		}
 		return true;
@@ -169,7 +172,7 @@ class Client {
 			trace("pinging server...");
 			socket.output.write(ping_packet);
 		} catch (z:Dynamic) {
-			trace("connection lost.\n");
+			trace("connection lost.");
 		}
 	}
 	
@@ -186,17 +189,17 @@ class Client {
 		try {
 			socket.output.write(location_packet);
 		} catch (z:Dynamic) {
-			trace("connection lost.\n");
+			trace("connection lost.");
 		}
 	}
 	
 	function on_info(packet) {
 		if (!Reflect.hasField(packet, "text")) return;
 		
-		trace("INFO>" + packet.text + "\n");
+		trace("INFO>" + packet.text);
 	}
-	function on_pong() {
-		trace("pong\n");
+	function on_pong(packet) {
+		trace("server ponged");
 	}
 	
 }
