@@ -82,6 +82,10 @@ class Client {
 		
 		// DC functions
 		DC.registerFunction(onChatLine, "chat");
+		
+		
+		on("INFO", on_info);
+		on("PONG", on_pong);
 	}
 	
 	/** 
@@ -154,7 +158,12 @@ class Client {
 			//var packet_id = packet._id;
 			var action = packet.action;
 			
-			//if (action != null) trace(packet);
+			if (event_map.exists(action)) {
+				on_trigger(action, [packet]);
+			} else {
+				trace("invalid XP type\n");
+				trace("Message Type: " + action);
+			}
 			
 			/*var text;
 			try {
@@ -224,7 +233,16 @@ class Client {
 			socket.close();
 		} catch (e:Dynamic) {
 			trace(e);
-		}
-			
+		}		
 	}
+	
+	function on_info(packet) {
+		if (!Reflect.hasField(packet, "text")) return;
+		
+		trace("INFO>" + packet.text + "\n");
+	}
+	function on_pong() {
+		trace("pong\n");
+	}
+	
 }
