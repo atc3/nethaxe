@@ -33,6 +33,9 @@ class Server {
 	public var accept_thread:Thread;
 	public var listen_threads:Array<Thread>;
 	
+	var event_map:Map<String, Dynamic>;
+	var callback_func:Dynamic;
+	
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
 		// Initialize some values
@@ -41,43 +44,163 @@ class Server {
 		// apply defaults
 		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
 		if (Port == 0) Port = Net.DEFAULT_PORT;
-		
 		info.port = Port;
 		info.hostname = Hostname;
-		
 		info.host = new Host(Hostname);
 		
 		// Bind server to port and start listening:
-		trace('Binding...\n');
+		trace('Binding...');
 		try {
 			socket = new Socket();
 			socket.bind(info.host, Port);
 			socket.listen(4);
 			
 			Net.server_active = true;
-			
 		} catch (z:Dynamic) {
-			// bind failed. some other server is probably hogging the specified port
-			trace('Could not bind to port.\n');
-			trace('Ensure that no server is running on port ' + Port + '.\n');
+			trace('Could not bind to port.');
+			trace('Ensure that no server is running on port ' + Port);
 			return;
-			
 		}
-		trace('Done.\n');
 		
 		clients = [];
 		
+		event_map = new Map<String, Dynamic>();
+		
+		// on triggers
+		on("CHAT", on_chat);
+		on("INFO", on_chat);
+		on("PING", on_ping);
+		on("REMOTEPLAYERLOC", on_remoteplayerloc);
+		
 		accept_thread = Thread.create(threadAccept);
 		listen_threads = [];
+		
+	}
+	
+	/** 
+	 * Accepts new sockets and spawns new threads for them 
+	 **/
+	function threadAccept() {
+		var thread_message = "";
+		while (thread_message != "finish") {
+			thread_message = Thread.readMessage(false);
+			
+			var sk = socket.accept();
+			if (sk != null) {
+				var cl = new ClientInfo(this, sk);
+				
+				var listen_thread = Thread.create(getThreadListen(cl));
+				listen_threads.push(listen_thread);
+			}
+		}
+	}
+	
+	/** 
+	 * Creates a new thread function to handle given ClientInfo 
+	 **/
+	function getThreadListen(cl:ClientInfo) {
+		return function() {
+			// keep track of this client
+			clients.push(cl);
+			
+			trace(Std.string(cl) + ' connected.');
+			broadcast(Std.string(cl) + ' connected.');
+			
+			var thread_message = "";
+			while (cl.active && thread_message != "finish") {
+				thread_message = Thread.readMessage(false);
+				
+				var packet = BSON.decode(cl.socket.input);
+				
+				// skip empty packet
+				if (Reflect.fields(packet).length <= 0) {
+					trace("received empty packet");
+					continue;
+				}
+				
+				trace(packet);
+				
+				var action = packet.action;
+				
+				if (event_map.exists(action)) {
+					on_trigger(action, [packet, cl]);
+				} else {
+					trace("invalid XP type");
+					trace("Message Type: " + action);
+					trace(packet);
+				}
+			}
+			
+			// if time out, clean up
+			trace(Std.string(cl) + ' timed out.');
+			broadcast(Std.string(cl) + ' timed out.');
+			
+			broadcast(cl.name + ' disconnected.');
+			clients.remove(cl);
+			
+			// attempt to destroy
+			try {
+				cl.socket.shutdown(true, true);
+				cl.socket.close();
+			} catch (e:Dynamic) {
+				trace(e);
+			}
+		}
+	}
+	
+	public function on(Event:String, Callback:Dynamic) {
+		if (!Reflect.isFunction(Callback)) {
+			trace("callback is not a function");
+			return;
+		}
+		event_map.set(Event, Callback);
+	}
+	public function on_trigger(Event:String, Args:Array<Dynamic>) {
+		callback_func = event_map.get(Event);
+		if (!Reflect.isFunction(callback_func)) {
+			trace("invalid on call");
+			return;
+		}
+		Reflect.callMethod(Net.server, Reflect.field(Net.server, "callback_func"), Args);
+	}
+	
+	private function destroy():Void {
+		
+		Net.server_active = false;
+		
+		// destroy threads
+		accept_thread.sendMessage("finish");
+		for (thread in listen_threads) {
+			thread.sendMessage("finish");
+		}
+		
+		// close sockets
+		for (cl in clients) {
+			try {
+				cl.socket.shutdown(true, true);
+				cl.socket.close();
+			} catch (e:Dynamic) {
+				trace(e);
+			}
+			cl = null;
+		}
+		try {
+			socket.shutdown(true, true);
+			socket.close();
+		} catch (e:Dynamic) {
+			trace(e);
+		}
+		
+		// clear vars
+		clients = [];
+		info = null;
 	}
 	
 	/** 
 	 * Sends given text to all active clients 
 	 **/
-	public function broadcast(Text:String, Type:String = "INFO") {
-		
+	function broadcast(Text:String, Type:String = "INFO") {
 		for (cl in clients) {
-			//cl.send("XP/" + Type + "\n");
 			cl.send(Text);
 		}
 	}
@@ -85,7 +208,7 @@ class Server {
 	/** 
 	 * Finds client(s) that match given name 
 	 **/
-	public function findClients(name:String) {
+	function find_clients(name:String) {
 		var r:Array<ClientInfo> = [];
 		name = name.toLowerCase();
 		for (cl in clients) {
@@ -97,7 +220,11 @@ class Server {
 	/** 
 	 * Chat message handler 
 	 **/
-	public function onChat(text:String, cl:ClientInfo) {
+	function on_chat(packet, cl:ClientInfo) {
+		
+		if (!Reflect.hasField(packet, "text")) return;
+		var text = packet.text;
+		
 		// disallow empty input
 		if (text == '') return;
 		
@@ -186,7 +313,7 @@ class Server {
 					}
 					
 					// find targeted client(s)
-					var rcs = findClients(rx.matched(1));
+					var rcs = find_clients(rx.matched(1));
 					
 					// not found
 					if (rcs.length == 0) { 
@@ -208,150 +335,42 @@ class Server {
 			broadcast((cl != null ? cl.name + ': ' : '') + text + '\n');
 		}
 	}
-	
-	/** 
-	 * Accepts new sockets and spawns new threads for them 
-	 **/
-	function threadAccept() {
-		var thread_message = "";
-		while (thread_message != "finish") {
-			thread_message = Thread.readMessage(false);
-			
-			var sk = socket.accept();
-			if (sk != null) {
-				var cl = new ClientInfo(this, sk);
-				
-				var listen_thread = Thread.create(getThreadListen(cl));
-				listen_threads.push(listen_thread);
-			}
-		}
-	}
-	
-	/** 
-	 * Creates a new thread function to handle given ClientInfo 
-	 **/
-	function getThreadListen(cl:ClientInfo) {
-		return function() {
-			// keep track of this client
-			clients.push(cl);
-			
-			trace(Std.string(cl) + ' connected.\n');
-			broadcast(Std.string(cl) + ' connected.\n');
-			
-			var thread_message = "";
-			while (cl.active && thread_message != "finish") {
-				thread_message = Thread.readMessage(false);
-				
-				if(cl.active) {
-					var packet = BSON.decode(cl.socket.input);
-					trace(packet);
-					
-					// skip empty packet
-					if(Reflect.fields(packet).length <= 0)
-						continue;
-					
-					//var packet_id = packet._id;
-					//var action = packet.action;
-					
-					//if (packet.action != null) trace(packet);
-					
-					//trace(action);
-				}
-				
-				/*try {
-					
-					var text = cl.socket.input.readLine();
-					
-					if (cl.active) {
-					
-						var msg_type = Net.xp_protocol_check(text);
-						if (msg_type != "") {
-							switch(msg_type) {
-								case "CHAT":
-									text = cl.socket.input.readLine();
-									onChat(text, cl);
-								case "PING":
-									trace(cl.name + " pinged\n");
-									trace("sending PONG to " + cl.name);
-									
-									cl.send("XP/PONG" + "\n");
-								case "REMOTEPLAYERLOC":
-									var id = cl.socket.input.readInt32();
-									var x = cl.socket.input.readFloat();
-									var y = cl.socket.input.readFloat();
-									
-									for (client in clients) {
-										//if (client.name != cl.name) {
-											client.send("XP/REMOTEPLAYERLOC" + "\n");
-											client.socket.output.writeInt32(id);
-											client.socket.output.writeFloat(x);
-											client.socket.output.writeFloat(y);
-										//}
-									}
-									
-								default:
-									// default behavior
-									trace("invalid XP type\n");
-									trace("Message Type: " + msg_type);
-							}
-						} else {
-							// default behavior - chat
-							onChat(text, cl);
-						}
-					}
-					
-				} catch (z:Dynamic) {
-					break;
-				}*/
-			}
-			
-			// if time out, clean up
-			trace(Std.string(cl) + ' timed out.\n');
-			broadcast(Std.string(cl) + ' timed out.\n');
-			
-			broadcast(cl.name + ' disconnected.\n');
-			clients.remove(cl);
-			
-			// attempt to destroy
-			try {
-				cl.socket.shutdown(true, true);
-				cl.socket.close();
-			} catch (e:Dynamic) {
-				trace(e);
-			}
-		}
-	}
-	
-	
-	function destroy():Void {
+
+	function on_ping(packet, cl:ClientInfo) {
+		trace(cl.name + " pinged");
+		trace("sending PONG to " + cl.name);
 		
-		Net.server_active = false;
+		var pong_packet = BSON.encode({
+			_id: new ObjectID()
+			, action: "PONG"
+		});
 		
-		// destroy threads
-		accept_thread.sendMessage("finish");
-		for (thread in listen_threads) {
-			thread.sendMessage("finish");
-		}
-		
-		// close sockets
-		for (cl in clients) {
-			try {
-				cl.socket.shutdown(true, true);
-				cl.socket.close();
-			} catch (e:Dynamic) {
-				trace(e);
-			}
-			cl = null;
-		}
 		try {
-			socket.shutdown(true, true);
-			socket.close();
-		} catch (e:Dynamic) {
-			trace(e);
+			cl.socket.output.write(pong_packet);
+		} catch (z:Dynamic) {
+			trace(z);
 		}
+	}
+	
+	function on_remoteplayerloc(packet, cl:ClientInfo) {
+		if (!Reflect.hasField(packet, "client_id")
+			|| !Reflect.hasField(packet, "x")
+			|| !Reflect.hasField(packet, "y")) return;
+			
+		var remoteplayerloc_packet = BSON.encode({
+			_id: new ObjectID()
+			, action: "REMOTEPLAYERLOC"
+			, client_id: packet.client_id
+			, x: packet.x
+			, y: packet.y
+		});
 		
-		// clear vars
-		clients = [];
-		info = null;
+		for (client in clients) {
+			try {
+				client.socket.output.write(remoteplayerloc_packet);
+			} catch (z:Dynamic) {
+				trace(z);
+			}
+		}
 	}
 }
