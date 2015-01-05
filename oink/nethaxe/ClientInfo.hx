@@ -39,11 +39,4 @@ class ClientInfo {
 			active = false;
 		}
 	}
-	public function sendBytes(s:Bytes) {
-		try {
-			socket.output.write(s);
-		} catch (z:Dynamic) {
-			active = false;
-		}
-	}
 }
