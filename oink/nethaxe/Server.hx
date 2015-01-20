@@ -164,7 +164,7 @@ class Server {
 		Reflect.callMethod(Net.server, Reflect.field(Net.server, "callback_func"), Args);
 	}
 	
-	private function destroy():Void {
+	public function destroy():Void {
 		
 		Net.server_active = false;
 		

@@ -9,21 +9,29 @@ class Net {
 	public static inline var DEFAULT_HOSTNAME:String = '127.0.0.1';
 	public static inline var DEFAULT_PORT:Int = 3000;
 	
-	public static var server:Server;
-	public static var client:Client;
+	public static var server;
+	public static var client;
+	
+	public static var server_class:Class<Server> = Server;
+	public static var client_class:Class<Client> = Client;
+	
+	public static var server_class_args:Array<Dynamic> = [];
+	public static var client_class_args:Array<Dynamic> = [];
 	
 	public static var server_active:Bool = false;
 	public static var client_active:Bool = false;
 	
 	public static function init():Void {
-		
+		//?
 	}
 	
 	public static function create_server():Void {
-		server = new Server();
+		//server = new Server();
+		server = Type.createInstance(server_class, server_class_args);
 	}
 	public static function create_client():Void {
-		client = new Client();
+		//client = new Client();
+		client = Type.createInstance(client_class, client_class_args);
 	}
 	
 	/**
@@ -46,7 +54,11 @@ class Net {
 	}
 	
 	public static function destroy():Void {
-		
+		// kill client and server if they exist
+		if(server != null)
+			server.destroy();
+		if(client != null)
+			client.destroy();
 	}
 	
 }

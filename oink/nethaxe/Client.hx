@@ -128,7 +128,7 @@ class Client {
 		Reflect.callMethod(Net.client, Reflect.field(Net.client, "callback_func"), Args);
 	}
 	
-	function destroy():Void {
+	public function destroy():Void {
 		Net.client_active = false;
 		
 		listen_thread.sendMessage("client_finish");
