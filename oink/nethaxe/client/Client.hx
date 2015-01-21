@@ -12,6 +12,7 @@ import pgr.dconsole.DC;
 /**
  * Client.hx
  * Chat client program behaviour
+ * Based off of yellowafterlife's chat client
  */
 
 class Client {	

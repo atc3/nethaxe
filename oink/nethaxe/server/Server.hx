@@ -16,6 +16,7 @@ import oink.nethaxe.client.ClientInfo;
 /**
  * Server.hx
  * Server side of chat.
+ * Based off of yellowafterlife's chat server
  */
 class Server {
 	/**
