@@ -54,11 +54,17 @@ class Client {
 		listen_thread = Thread.create(threadListen);		
 	}
 	
-	public function connect(Hostname:String = '', Port:Int = 0) {
+	/**
+	 * connect to the given hostname and port
+	 * @param	Hostname
+	 * @param	Port
+	 * @return true if successful, false if fail
+	 */
+	public function connect(Hostname:String = '', Port:Int = 0):Bool {
 		
 		// disconnect first if necessary
 		if (Net.client_active) {
-			if (!disconnect()) return;
+			if (!disconnect()) return false;
 		}
 		
 		// check defaults
@@ -73,15 +79,21 @@ class Client {
 			socket.connect(host, Port);
 		} catch (z:Dynamic) {
 			trace('Could not connect to ' + Hostname + ':' + Port);
-			return;
+			return false;
 		}
 		
 		Net.client_active = true;
 		trace('Connected to ' + Hostname + ':' + Port);
 		hostname = Hostname;
 		port = Port;
+		
+		return true;
 	}
 	
+	/**
+	 * disconnect from current server
+	 * @return true if success, false if fail
+	 */
 	public function disconnect():Bool {
 		try {
 			socket.shutdown(true, true);
@@ -96,6 +108,7 @@ class Client {
 	
 	/** 
 	 * Listener thread
+	 * handles input from server and calls on functions
 	 **/
 	function threadListen() {
 		var thread_message = "";
@@ -123,26 +136,48 @@ class Client {
 		}
 	}
 	
-	public function on(Event:String, Callback:Dynamic) {
+	/**
+	 * register/map an on function
+	 * @param	Event name of the function/event
+	 * @param	Callback function to call. packet is automatically 
+	 * passed as the first variable to the callback function
+	 * @return true if success, false if fail
+	 */
+	public function on(Event:String, Callback:Dynamic):Bool {
 		if (!Reflect.isFunction(Callback)) {
 			trace("callback is not a function");
-			return;
+			return false;
 		}
 		
 		// remove existing mapping if it exists
 		if (event_map.exists(Event)) event_map.remove(Event);
 		
 		event_map.set(Event, Callback);
+		
+		return true;
 	}
-	private function on_trigger(Event:String, Args:Array<Dynamic>) {
+	
+	/**
+	 * internal helper
+	 * trigger an on function
+	 * @param	Event event to trigger
+	 * @param	Args args passed
+	 * @return true if success, false if fail
+	 */
+	private function on_trigger(Event:String, Args:Array<Dynamic>):Bool {
 		callback_func = event_map.get(Event);
 		if (!Reflect.isFunction(callback_func)) {
 			trace("invalid on call");
-			return;
+			return false;
 		}
 		Reflect.callMethod(Net.client, Reflect.field(Net.client, "callback_func"), Args);
+		return true;
 	}
 	
+	/**
+	 * destroy the client
+	 * disconnects and stops threads too
+	 */
 	public function destroy():Void {
 		Net.client_active = false;
 		

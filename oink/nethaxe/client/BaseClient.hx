@@ -18,18 +18,23 @@ class BaseClient extends Client {
 		on("PONG", on_pong);
 		
 		// DC functions
-		DC.registerFunction(onChatLine, "chat");
+		DC.registerFunction(on_chat, "chat");
 	}
 	
-	override public function connect(Hostname:String = '', Port:Int = 0) {
+	override public function connect(Hostname:String = '', Port:Int = 0):Bool {
 		super.connect(Hostname, Port);
 		
 		// assign us a random name
 		id = Std.int(Math.random() * 65536);
-		onChatLine('/name User' + id);
+		on_chat('/name User' + id);
 	}
 	
-	function onChatLine(text:String):Bool {
+	/**
+	 * send a chat object to the server
+	 * @param	text chat or command to send
+	 * @return true on success, false on fail
+	 */
+	public function on_chat(text:String):Bool {
 		
 		var chat_packet = BSON.encode({
 			_id: new ObjectID()
@@ -46,7 +51,11 @@ class BaseClient extends Client {
 		return true;
 	}
 	
-	public function ping() {
+	/**
+	 * ping the server
+	 * @return true on success, false on fail
+	 */
+	public function ping():Bool {
 		
 		var ping_packet = BSON.encode({
 			_id: new ObjectID()
@@ -58,10 +67,19 @@ class BaseClient extends Client {
 			socket.output.write(ping_packet);
 		} catch (z:Dynamic) {
 			trace("connection lost.");
+			return false;
 		}
+		
+		return true;
 	}
 	
-	public function send_player_location(X:Float, Y:Float) {
+	/**
+	 * send server player location packet
+	 * @param	X x location of player
+	 * @param	Y y location of player
+	 * @return true on success, false on fail
+	 */
+	public function send_player_location(X:Float, Y:Float):Bool {
 		
 		var location_packet = BSON.encode({
 			_id: new ObjectID()
@@ -75,16 +93,29 @@ class BaseClient extends Client {
 			socket.output.write(location_packet);
 		} catch (z:Dynamic) {
 			trace("connection lost.");
+			return false;
 		}
+		
+		return true;
 	}
 	
+	/**
+	 * handle info packet from server.
+	 * only traces for now
+	 * @param	packet
+	 */
 	function on_info(packet) {
 		if (!Reflect.hasField(packet, "text")) return;
 		
 		trace("INFO>" + packet.text);
 	}
+	
+	/**
+	 * handle server pong
+	 * TODO: elapsed time?
+	 * @param	packet
+	 */
 	function on_pong(packet) {
 		trace("server ponged");
-	}
-	
+	}	
 }

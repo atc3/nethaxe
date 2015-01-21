@@ -152,26 +152,48 @@ class Server {
 		}
 	}
 	
-	public function on(Event:String, Callback:Dynamic) {
+	/**
+	 * register/map an on function
+	 * @param	Event name of the function/event
+	 * @param	Callback function to call. packet is automatically 
+	 * passed as the first variable to the callback function
+	 * @return true if success, false if fail
+	 */
+	public function on(Event:String, Callback:Dynamic):Bool {
 		if (!Reflect.isFunction(Callback)) {
 			trace("callback is not a function");
-			return;
+			return false;
 		}
 		
 		// remove existing mapping if it exists
 		if (event_map.exists(Event)) event_map.remove(Event);
 		
 		event_map.set(Event, Callback);
+		
+		return true;
 	}
-	public function on_trigger(Event:String, Args:Array<Dynamic>) {
+	
+	/**
+	 * internal helper
+	 * trigger an on function
+	 * @param	Event event to trigger
+	 * @param	Args args passed
+	 * @return true if success, false if fail
+	 */
+	public function on_trigger(Event:String, Args:Array<Dynamic>):Bool {
 		callback_func = event_map.get(Event);
 		if (!Reflect.isFunction(callback_func)) {
 			trace("invalid on call");
-			return;
+			return false;
 		}
 		Reflect.callMethod(Net.server, Reflect.field(Net.server, "callback_func"), Args);
+		return true;
 	}
 	
+	/**
+	 * destroy server
+	 * disconnects all clients and kills all threads
+	 */
 	public function destroy():Void {
 		
 		Net.server_active = false;
