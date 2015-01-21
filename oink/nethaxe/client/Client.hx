@@ -1,12 +1,14 @@
 package oink.nethaxe.client ;
 
 import cpp.vm.Thread;
-import haxe.io.Bytes;
-import haxe.io.BytesInput;
-import org.bsonspec.BSON;
-import org.bsonspec.ObjectID;
 import sys.net.Host;
 import sys.net.Socket;
+
+import haxe.io.Bytes;
+import haxe.io.BytesInput;
+
+import org.bsonspec.BSON;
+import org.bsonspec.ObjectID;
 import pgr.dconsole.DC;
 
 /**
@@ -14,8 +16,13 @@ import pgr.dconsole.DC;
  * Chat client program behaviour
  * Based off of yellowafterlife's chat client
  */
-
 class Client {	
+	
+	/**
+	 * exposed id for use by servers
+	 */
+	public var id:Int;
+	
 	/**
 	 * hostname of server to connect to
 	 */ 
@@ -36,13 +43,27 @@ class Client {
 	 */
 	var socket:Socket;
 	
+	/**
+	 * thread that handles server i/o
+	 */
 	var listen_thread:Thread;
 	
-	var event_map:Map<String, Dynamic>;
-	var callback_func:Dynamic;
+	/**
+	 * map of all 'on' event callbacks
+	 */
+	private var event_map:Map<String, Dynamic>;
 	
-	public var id:Int;
-	
+	/**
+	 * helper var to track and call 'on' functions
+	 */
+	private var callback_func:Dynamic;
+
+	/**
+	 * constructor
+	 * auto connects to given host and port
+	 * @param	Hostname
+	 * @param	Port
+	 */
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
 		trace('Creating Client...');
