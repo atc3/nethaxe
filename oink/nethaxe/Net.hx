@@ -9,30 +9,54 @@ class Net {
 	public static inline var DEFAULT_HOSTNAME:String = '127.0.0.1';
 	public static inline var DEFAULT_PORT:Int = 3000;
 	
+	public static var inited:Bool = false;
+	
 	public static var server;
 	public static var client;
 	
-	public static var server_class:Class<Server> = Server;
-	public static var client_class:Class<Client> = Client;
+	public static var server_class:Class<Server>;
+	public static var client_class:Class<Client>;
 	
-	public static var server_class_args:Array<Dynamic> = [];
-	public static var client_class_args:Array<Dynamic> = [];
+	public static var server_class_args:Array<Dynamic>;
+	public static var client_class_args:Array<Dynamic>;
 	
-	public static var server_active:Bool = false;
-	public static var client_active:Bool = false;
+	public static var server_active:Bool;
+	public static var client_active:Bool;
 	
 	public static function init():Void {
-		//?
+		
+		// set defaults
+		server_class = Server;
+		client_class = Client;
+		
+		server_class_args = [];
+		client_class_args = [];
+		
+		server_active = false;
+		client_active = false;
+		
+		inited = true;
+	}
+	
+	public static function destroy():Void {
+		if (!inited) return;
+		
+		// kill client and server if they exist
+		if(server != null)
+			server.destroy();
+		if(client != null)
+			client.destroy();
 	}
 	
 	public static function create_server():Void {
-		//server = new Server();
+		if (!inited) init();
 		server = Type.createInstance(server_class, server_class_args);
 	}
 	public static function create_client():Void {
-		//client = new Client();
+		if (!inited) init();
 		client = Type.createInstance(client_class, client_class_args);
 	}
+
 	
 	/**
 	 * helper function to verify arguments of bson packets before processing
@@ -51,14 +75,5 @@ class Net {
 		}
 		
 		return out;
-	}
-	
-	public static function destroy():Void {
-		// kill client and server if they exist
-		if(server != null)
-			server.destroy();
-		if(client != null)
-			client.destroy();
-	}
-	
+	}	
 }
