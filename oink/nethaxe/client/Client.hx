@@ -1,4 +1,4 @@
-package oink.nethaxe;
+package oink.nethaxe.client ;
 
 import cpp.vm.Thread;
 import haxe.io.Bytes;

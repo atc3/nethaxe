@@ -1,9 +1,11 @@
-package oink.nethaxe;
+package oink.nethaxe.client ;
 
 import haxe.io.Bytes;
 import org.bsonspec.BSON;
 import org.bsonspec.ObjectID;
 import sys.net.Socket;
+
+import oink.nethaxe.server.Server;
 
 /**
  * Wrapper for the client socket.

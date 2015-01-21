@@ -1,7 +1,9 @@
-package oink.nethaxe;
+package oink.nethaxe.server ;
 
 import pgr.dconsole.DC;
 import sys.net.Host;
+
+import oink.nethaxe.client.ClientInfo;
 
 /**
  * Wrapper for the server socket

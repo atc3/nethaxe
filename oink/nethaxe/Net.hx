@@ -4,6 +4,9 @@ import haxe.io.Bytes;
 import haxe.io.BytesBuffer;
 import pgr.dconsole.DC;
 
+import oink.nethaxe.client.Client;
+import oink.nethaxe.server.Server;
+
 class Net {
 
 	public static inline var DEFAULT_HOSTNAME:String = '127.0.0.1';

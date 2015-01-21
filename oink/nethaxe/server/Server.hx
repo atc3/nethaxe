@@ -1,4 +1,4 @@
-package oink.nethaxe;
+package oink.nethaxe.server ;
 
 import cpp.vm.Thread;
 import haxe.io.BytesInput;
@@ -9,6 +9,9 @@ import sys.net.Socket;
 import pgr.dconsole.DC;
 
 import org.bsonspec.BSON;
+
+import oink.nethaxe.client.Client;
+import oink.nethaxe.client.ClientInfo;
 
 /**
  * Server.hx
