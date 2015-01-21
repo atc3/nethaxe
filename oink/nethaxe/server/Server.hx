@@ -19,6 +19,9 @@ import oink.nethaxe.client.ClientInfo;
  * Based off of yellowafterlife's chat server
  */
 class Server {
+	
+	public static inline var MAX_CLIENTS = 4;
+	
 	/**
 	 * server socket that will accept all incoming connections
 	 */
@@ -45,26 +48,7 @@ class Server {
 		// Initialize some values
 		info = new ServerInfo(this);
 		
-		// apply defaults
-		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
-		if (Port == 0) Port = Net.DEFAULT_PORT;
-		info.port = Port;
-		info.hostname = Hostname;
-		info.host = new Host(Hostname);
-		
-		// Bind server to port and start listening:
-		trace('Binding...');
-		try {
-			socket = new Socket();
-			socket.bind(info.host, Port);
-			socket.listen(4);
-			
-			Net.server_active = true;
-		} catch (z:Dynamic) {
-			trace('Could not bind to port.');
-			trace('Ensure that no server is running on port ' + Port);
-			return;
-		}
+		bind(Hostname, Port);
 		
 		clients = [];
 		
@@ -81,8 +65,38 @@ class Server {
 		
 	}
 	
+	/**
+	 * bind the server to the given hostname and port
+	 * @param	Hostname host to bind to. eg. 'localhost'. defaults to 127.0.0.1
+	 * @param	Port port to bind to. defaults to 3000
+	 * @return true if success, false if fail
+	 */
+	public function bind(Hostname:String, Port:Int):Bool {
+		
+		// apply defaults
+		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
+		if (Port == 0) Port = Net.DEFAULT_PORT;
+		info.port = Port;
+		info.hostname = Hostname;
+		info.host = new Host(Hostname);
+		
+		// Bind server to port and start listening:
+		trace('Binding...');
+		try {
+			socket = new Socket();
+			socket.bind(info.host, Port);
+			socket.listen(MAX_CLIENTS);
+		} catch (z:Dynamic) {
+			trace('Could not bind to port.');
+			trace('Ensure that no server is running on port ' + Port);
+			return false;
+		}
+		Net.server_active = true;
+		return true;
+	}
+	
 	/** 
-	 * Accepts new sockets and spawns new threads for them 
+	 * Accepts new sockets and spawns new threads for them
 	 **/
 	function threadAccept() {
 		var thread_message = "";
