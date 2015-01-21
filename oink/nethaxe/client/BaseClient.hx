@@ -27,6 +27,8 @@ class BaseClient extends Client {
 		// assign us a random name
 		id = Std.int(Math.random() * 65536);
 		on_chat('/name User' + id);
+		
+		return true;
 	}
 	
 	/**
