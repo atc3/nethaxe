@@ -23,6 +23,7 @@ class Net {
 	public static var server_active:Bool;
 	public static var client_active:Bool;
 	
+	
 	public static function init():Void {
 		
 		// set defaults
@@ -38,16 +39,6 @@ class Net {
 		inited = true;
 	}
 	
-	public static function destroy():Void {
-		if (!inited) return;
-		
-		// kill client and server if they exist
-		if(server != null)
-			server.destroy();
-		if(client != null)
-			client.destroy();
-	}
-	
 	public static function create_server():Void {
 		if (!inited) init();
 		server = Type.createInstance(server_class, server_class_args);
@@ -56,7 +47,29 @@ class Net {
 		if (!inited) init();
 		client = Type.createInstance(client_class, client_class_args);
 	}
-
+	
+	public static function extend_server(Server_Class:Class<Server>, ?Args:Array<Dynamic>):Void {
+		if (!inited) init();
+		
+		server_class = Server_Class;
+		server_class_args = Args;
+		
+		if (server != null) {
+			server.destroy();
+		}
+		create_server();
+	}
+	public static function extend_client(Client_Class:Class<Client>, ?Args:Array<Dynamic>):Void {
+		if (!inited) init();
+		
+		client_class = Client_Class;
+		client_class_args = Args;
+		
+		if (client != null) {
+			client.destroy();
+		}
+		create_client();
+	}
 	
 	/**
 	 * helper function to verify arguments of bson packets before processing
@@ -76,4 +89,15 @@ class Net {
 		
 		return out;
 	}	
+	
+		
+	public static function destroy():Void {
+		if (!inited) return;
+		
+		// kill client and server if they exist
+		if(server != null)
+			server.destroy();
+		if(client != null)
+			client.destroy();
+	}
 }
