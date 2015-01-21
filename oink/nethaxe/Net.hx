@@ -23,7 +23,10 @@ class Net {
 	public static var server_active:Bool;
 	public static var client_active:Bool;
 	
-	
+	/**
+	 * set flags and defaults. nothing fancy
+	 * forced to run before anything is done with Net
+	 */
 	public static function init():Void {
 		
 		// set defaults
@@ -39,15 +42,29 @@ class Net {
 		inited = true;
 	}
 	
+	/**
+	 * create server instance.
+	 * set a specified instance with extend_server
+	 */
 	public static function create_server():Void {
 		if (!inited) init();
 		server = Type.createInstance(server_class, server_class_args);
 	}
+	/**
+	 * create client instance
+	 * set a specified instance with extend_client
+	 */
 	public static function create_client():Void {
 		if (!inited) init();
 		client = Type.createInstance(client_class, client_class_args);
 	}
 	
+	/**
+	 * extend the server class with your own custom one.
+	 * automatically calls create_server for you
+	 * @param	Server_Class server extension
+	 * @param	Args server extension constructor arguments
+	 */
 	public static function extend_server(Server_Class:Class<Server>, ?Args:Array<Dynamic>):Void {
 		if (!inited) init();
 		
@@ -59,6 +76,13 @@ class Net {
 		}
 		create_server();
 	}
+	
+	/**
+	 * extend the client class with your own custom one.
+	 * automatically calls create_client for you
+	 * @param	Client_Class client extension
+	 * @param	Args client extension constructor arguments
+	 */
 	public static function extend_client(Client_Class:Class<Client>, ?Args:Array<Dynamic>):Void {
 		if (!inited) init();
 		
@@ -90,7 +114,9 @@ class Net {
 		return out;
 	}	
 	
-		
+	/**
+	 * kill la kill
+	 */
 	public static function destroy():Void {
 		if (!inited) return;
 		
