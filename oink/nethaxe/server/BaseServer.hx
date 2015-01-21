@@ -1,9 +1,14 @@
 package oink.nethaxe.server;
 
-import oink.nethaxe.client.ClientInfo;
 import org.bsonspec.BSON;
 import org.bsonspec.ObjectID;
 
+import oink.nethaxe.client.ClientInfo;
+
+/**
+ * handy class with a few core on functions.
+ * showcases extendability of server class
+ */
 class BaseServer extends Server {
 
 	public function new(Hostname:String='', Port:Int=0)	{
