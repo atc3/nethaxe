@@ -45,11 +45,35 @@ class Client {
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
 		trace('Creating Client...');
+		
+		socket = new Socket();
+		
+		connect(Hostname, Port);
+		
+		event_map = new Map<String, Dynamic>();
+		
+		// basic on functions
+		on("INFO", on_info);
+		on("PONG", on_pong);
+		
+		listen_thread = Thread.create(threadListen);
+		
+		// DC functions
+		DC.registerFunction(onChatLine, "chat");
+		
+	}
+	
+	public function connect(Hostname:String = '', Port:Int = 0) {
+		
+		// disconnect first if necessary
+		if (Net.client_active) {
+			if (!disconnect()) return;
+		}
+		
 		// check defaults
 		if (Hostname == '') Hostname = Net.DEFAULT_HOSTNAME;
 		if (Port == 0) Port = Net.DEFAULT_PORT;
 		
-		socket = new Socket();	
 		host = new Host(Hostname);
 		
 		// attempt to connect
@@ -69,18 +93,18 @@ class Client {
 		// assign us a random name
 		id = Std.int(Math.random() * 65536);
 		onChatLine('/name User' + id);
-		
-		event_map = new Map<String, Dynamic>();
-		
-		// basic on functions
-		on("INFO", on_info);
-		on("PONG", on_pong);
-		
-		listen_thread = Thread.create(threadListen);
-		
-		// DC functions
-		DC.registerFunction(onChatLine, "chat");
-		
+	}
+	
+	public function disconnect():Bool {
+		try {
+			socket.shutdown(true, true);
+			socket.close();
+		} catch (e:Dynamic) {
+			trace('Could not disconnect from ' + hostname + ':' + port);
+			return false;
+		}
+		Net.client_active = false;
+		return true;
 	}
 	
 	/** 
