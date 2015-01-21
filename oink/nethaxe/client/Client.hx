@@ -46,22 +46,12 @@ class Client {
 	public function new(Hostname:String = '', Port:Int = 0) {
 		
 		trace('Creating Client...');
-		
 		socket = new Socket();
 		
 		connect(Hostname, Port);
 		
 		event_map = new Map<String, Dynamic>();
-		
-		// basic on functions
-		on("INFO", on_info);
-		on("PONG", on_pong);
-		
-		listen_thread = Thread.create(threadListen);
-		
-		// DC functions
-		DC.registerFunction(onChatLine, "chat");
-		
+		listen_thread = Thread.create(threadListen);		
 	}
 	
 	public function connect(Hostname:String = '', Port:Int = 0) {
@@ -90,10 +80,6 @@ class Client {
 		trace('Connected to ' + Hostname + ':' + Port);
 		hostname = Hostname;
 		port = Port;
-		
-		// assign us a random name
-		id = Std.int(Math.random() * 65536);
-		onChatLine('/name User' + id);
 	}
 	
 	public function disconnect():Bool {
@@ -169,66 +155,4 @@ class Client {
 			trace(e);
 		}		
 	}
-	
-	/** 
-	 * Input handler 
-	 **/
-	function onChatLine(text:String):Bool {
-		
-		var chat_packet = BSON.encode({
-			_id: new ObjectID()
-			, action: "CHAT"
-			, text: text
-		});
-		
-		try {
-			socket.output.write(chat_packet);
-		} catch (z:Dynamic) {
-			trace('Connection lost.');
-			return false;
-		}
-		return true;
-	}
-	
-	public function ping() {
-		
-		var ping_packet = BSON.encode({
-			_id: new ObjectID()
-			, action: "PING"
-		});
-		
-		try {
-			trace("pinging server...");
-			socket.output.write(ping_packet);
-		} catch (z:Dynamic) {
-			trace("connection lost.");
-		}
-	}
-	
-	public function send_player_location(X:Float, Y:Float) {
-		
-		var location_packet = BSON.encode({
-			_id: new ObjectID()
-			, action: "REMOTEPLAYERLOC"
-			, client_id: this.id
-			, x: X
-			, y: Y
-		});
-		
-		try {
-			socket.output.write(location_packet);
-		} catch (z:Dynamic) {
-			trace("connection lost.");
-		}
-	}
-	
-	function on_info(packet) {
-		if (!Reflect.hasField(packet, "text")) return;
-		
-		trace("INFO>" + packet.text);
-	}
-	function on_pong(packet) {
-		trace("server ponged");
-	}
-	
 }

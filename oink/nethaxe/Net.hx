@@ -14,8 +14,8 @@ class Net {
 	
 	public static var inited:Bool = false;
 	
-	public static var server;
-	public static var client;
+	public static var server:Dynamic;
+	public static var client:Dynamic;
 	
 	public static var server_class:Class<Server>;
 	public static var client_class:Class<Client>;
@@ -60,42 +60,6 @@ class Net {
 	public static function create_client():Void {
 		if (!inited) init();
 		client = Type.createInstance(client_class, client_class_args);
-	}
-	
-	/**
-	 * extend the server class with your own custom one.
-	 * automatically calls create_server for you
-	 * @param	Server_Class server extension
-	 * @param	Args server extension constructor arguments
-	 */
-	public static function extend_server(Server_Class:Class<Server>, ?Args:Array<Dynamic>):Void {
-		if (!inited) init();
-		
-		server_class = Server_Class;
-		server_class_args = Args;
-		
-		if (server != null) {
-			server.destroy();
-		}
-		create_server();
-	}
-	
-	/**
-	 * extend the client class with your own custom one.
-	 * automatically calls create_client for you
-	 * @param	Client_Class client extension
-	 * @param	Args client extension constructor arguments
-	 */
-	public static function extend_client(Client_Class:Class<Client>, ?Args:Array<Dynamic>):Void {
-		if (!inited) init();
-		
-		client_class = Client_Class;
-		client_class_args = Args;
-		
-		if (client != null) {
-			client.destroy();
-		}
-		create_client();
 	}
 	
 	/**
