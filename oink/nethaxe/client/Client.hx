@@ -141,6 +141,10 @@ class Client {
 			trace("callback is not a function");
 			return;
 		}
+		
+		// remove existing mapping if it exists
+		if (event_map.exists(Event)) event_map.remove(Event);
+		
 		event_map.set(Event, Callback);
 	}
 	private function on_trigger(Event:String, Args:Array<Dynamic>) {
